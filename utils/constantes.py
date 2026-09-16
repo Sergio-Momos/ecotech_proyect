@@ -1,0 +1,11 @@
+PATRON_CORREO = r"^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$"
+PATRON_NOMBRE = r"^[a-zA-ZáéíóúÁÉÍÓÚÑñ\s'-]+$"
+PATRON_TELEFONO = r"^\d{8,9}$"
+PATRON_RUT = r"^\d{7,8}[\dK]$"
+PATRON_USER = r"^[a-zA-Z0-9_]+$"
+
+ERROR_CORREO = "Correo inválido."
+ERROR_SOLO_LETRAS = "Solo letras."
+ERROR_TELEFONO = "Debe tener 8 o 9 números."
+ERROR_RUT = "RUT inválido."
+ERROR_USER = "Solo letras, números y guión bajo."

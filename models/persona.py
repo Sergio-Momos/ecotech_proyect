@@ -1,3 +1,22 @@
+from utils.validaciones import validar_texto, validar_rut_chileno, validar_con_patron
+from utils.constantes import PATRON_CORREO, ERROR_CORREO, PATRON_TELEFONO, ERROR_TELEFONO
+from utils.constantes import (
+    ERROR_CORREO,
+    ERROR_RUT,
+    ERROR_SOLO_LETRAS,
+    ERROR_TELEFONO,
+    PATRON_CORREO,
+    PATRON_NOMBRE,
+    PATRON_TELEFONO,
+)
+from utils.validaciones import (
+    normalizar_rut,
+    validar_con_patron,
+    validar_rut_chileno,
+    validar_texto,
+)
+
+
 class Persona:
     """Datos personales comunes a las personas registradas en EcoTech.
 
@@ -25,13 +44,8 @@ class Persona:
 
     @staticmethod
     def _validar_texto(valor: str, campo: str) -> str:
-        if not isinstance(valor, str):
-            raise TypeError(f"{campo} debe ser un texto.")
-
-        valor = valor.strip()
-        if not valor:
-            raise ValueError(f"{campo} no puede estar vacío.")
-        return valor
+        """Mantiene un punto común de validación para la clase."""
+        return validar_texto(valor, campo)
 
     @staticmethod
     def _validar_id(valor: int) -> None:
@@ -51,7 +65,9 @@ class Persona:
 
     @nombre.setter
     def nombre(self, valor: str) -> None:
-        self._nombre = self._validar_texto(valor, "El nombre")
+        self._nombre = validar_con_patron(
+            valor, "El nombre", PATRON_NOMBRE, ERROR_SOLO_LETRAS
+        )
 
     @property
     def direccion(self) -> str:
@@ -67,7 +83,7 @@ class Persona:
 
     @telefono.setter
     def telefono(self, valor: str) -> None:
-        self._telefono = self._validar_texto(valor, "El teléfono")
+        self._telefono = validar_con_patron(valor, "El teléfono", PATRON_TELEFONO, ERROR_TELEFONO)
 
     @property
     def correo(self) -> str:
@@ -75,14 +91,7 @@ class Persona:
 
     @correo.setter
     def correo(self, valor: str) -> None:
-        correo = self._validar_texto(valor, "El correo")
-        if correo.count("@") != 1:
-            raise ValueError(f"Correo inválido: {valor}")
-
-        usuario, dominio = correo.split("@")
-        if not usuario or not dominio or "." not in dominio:
-            raise ValueError(f"Correo inválido: {valor}")
-        self._correo = correo
+        self._correo = validar_con_patron(valor, "El correo", PATRON_CORREO, ERROR_CORREO)
 
     @property
     def rut(self) -> str:
@@ -90,7 +99,10 @@ class Persona:
 
     @rut.setter
     def rut(self, valor: str) -> None:
-        self._rut = self._validar_texto(valor, "El RUT")
+        valor = normalizar_rut(valor)
+        if not validar_rut_chileno(valor):
+            raise ValueError(ERROR_RUT)
+        self._rut = valor
 
     def get_nombre_completo(self) -> str:
         """Devuelve el nombre tal como fue definido en el modelo."""

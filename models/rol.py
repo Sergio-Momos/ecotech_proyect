@@ -10,6 +10,7 @@ class Rol:
     ELIMINAR_EMPLEADOS = "empleados.eliminar"
     ASIGNAR_EMPLEADOS_DEPARTAMENTO = "empleados.asignar_departamento"
     ASIGNAR_EMPLEADOS_PROYECTO = "empleados.asignar_proyecto"
+    CAMPO_PERMISO = "El permiso"
 
     PERMISOS_RRHH = frozenset(
         {
@@ -52,14 +53,14 @@ class Rol:
         return frozenset(self._permisos)
 
     def agregar_permiso(self, permiso: str) -> None:
-        self._permisos.add(self._validar_texto(permiso, "El permiso"))
+        self._permisos.add(self._validar_texto(permiso, self.CAMPO_PERMISO))
 
     def quitar_permiso(self, permiso: str) -> None:
-        self._permisos.discard(self._validar_texto(permiso, "El permiso"))
+        self._permisos.discard(self._validar_texto(permiso, self.CAMPO_PERMISO))
 
     def tiene_permiso(self, permiso: str) -> bool:
         """Indica si el rol permite ejecutar una acción específica."""
-        permiso = self._validar_texto(permiso, "El permiso")
+        permiso = self._validar_texto(permiso, self.CAMPO_PERMISO)
         return permiso in self._permisos
 
     @classmethod
