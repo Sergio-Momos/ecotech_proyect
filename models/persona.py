@@ -1,5 +1,3 @@
-from utils.validaciones import validar_texto, validar_rut_chileno, validar_con_patron
-from utils.constantes import PATRON_CORREO, ERROR_CORREO, PATRON_TELEFONO, ERROR_TELEFONO
 from utils.constantes import (
     ERROR_CORREO,
     ERROR_RUT,
