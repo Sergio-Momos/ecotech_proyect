@@ -45,6 +45,17 @@ def validar_con_patron(valor: str, campo: str, patron: str, mensaje_error: str) 
     return valor
 
 
+def validar_password(valor: str, patron: str, mensaje_error: str) -> str:
+    """Valida una contraseña sin alterarla antes de almacenarla o hashearla."""
+    if not isinstance(valor, str):
+        raise TypeError("La contraseña debe ser un texto.")
+    if not valor:
+        raise ValueError("La contraseña no puede estar vacía.")
+    if not re.fullmatch(patron, valor):
+        raise ValueError(mensaje_error)
+    return valor
+
+
 def normalizar_rut(rut: str) -> str:
     """Elimina puntos y guion de un RUT para validarlo uniformemente."""
     rut = validar_texto(rut, "El RUT")

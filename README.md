@@ -9,7 +9,7 @@ Probablemente si estas aquí y abriste esto eres decente de leer mi mensaje ante
               /'\|   |/'\ ^^     _)                 
           /'\|   |   |   |IIII|__/                  
          |   |   |   |   |\III/ |                   
-         |   |   |   |   |  \   /    FUCK YOU RETARD
+         |   |   |   |   |  \   /       FUCK YOU 
          | *   *   *   * |>  >       XXXXXXXXXXXXXXX
          |                  /                       
           |               /                         
