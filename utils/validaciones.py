@@ -60,3 +60,9 @@ def normalizar_rut(rut: str) -> str:
     """Elimina puntos y guion de un RUT para validarlo uniformemente."""
     rut = validar_texto(rut, "El RUT")
     return rut.replace(".", "").replace("-", "").upper()
+
+def validar_id(valor: int, campo: str = "El id") -> None:
+    if not isinstance(valor, int) or isinstance(valor, bool):
+        raise TypeError(f"{campo} debe ser un número entero.")
+    if valor <= 0:
+        raise ValueError(f"{campo} debe ser mayor que cero.")

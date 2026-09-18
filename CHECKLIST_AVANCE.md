@@ -17,12 +17,12 @@ Este documento registra el estado observado directamente en el repositorio. Una 
 - [x] `Persona`: atributos base, validaciones y `get_nombre_completo()`.
 - [x] `Empleado`: hereda de `Persona`; incluye salario y fecha de inicio de contrato.
 - [x] `Rol`: permisos encapsulados y método `tiene_permiso()`.
-- [ ] `Usuario`: archivo creado, sin implementación.
-- [ ] `Departamento`: archivo creado, sin implementación.
+- [x] `Usuario`: Implementado sistema de validacion de contraseña Y HASHEO 
+- [x] `Departamento`: archivo creado, sin implementación.
 - [ ] `Proyecto`: archivo creado, sin implementación.
 - [ ] `RegistroTiempo`: archivo creado, sin implementación.
 - [ ] `Informe`: archivo creado, sin implementación.
-- [ ] `Seguridad`: archivo creado, sin implementación.
+- [x] `Seguridad`: PENDIENTE VER CIFRADO
 
 ### Relaciones y métodos del modelo
 

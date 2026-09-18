@@ -2,7 +2,9 @@ from utils.constantes import (
     PATRON_USERNAME, ERROR_USERNAME, 
     PATRON_PASSWORD, ERROR_PASSWORD
 )
-from utils.validaciones import validar_con_patron, validar_password
+from utils.validaciones import validar_con_patron, validar_password, validar_id
+
+from .seguridad import Seguridad
 
 class Usuario:
     def __init__(self, id: int, username: str, password: str):
@@ -13,10 +15,7 @@ class Usuario:
 
     @staticmethod
     def _validar_id(valor: int) -> None:
-        if not isinstance(valor, int) or isinstance(valor, bool):
-            raise TypeError("El id debe ser un número entero.")
-        if valor <= 0:
-            raise ValueError("El id debe ser mayor que cero.")
+        validar_id(valor, "El id")
 
     @property
     def id(self) -> int:
@@ -43,7 +42,8 @@ class Usuario:
 
     @password.setter
     def password(self, valor: str) -> None:
-        self._password = validar_password(valor, PATRON_PASSWORD, ERROR_PASSWORD)
+        valor_validado = validar_password(valor, PATRON_PASSWORD, ERROR_PASSWORD)
+        self._password = Seguridad.hashear_password(valor_validado)
         
     def __str__(self) -> str:
         return f"Usuario: {self.username} (ID: {self.id})"
