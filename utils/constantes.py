@@ -3,7 +3,7 @@ PATRON_NOMBRE = r"^[a-zA-ZáéíóúÁÉÍÓÚÑñ\s'-]+$"
 PATRON_TELEFONO = r"^\d{8,9}$"
 PATRON_RUT = r"^\d{7,8}[\dK]$"
 PATRON_USERNAME = r"^(?!\.)(?!.*\.\.)[a-zA-Z0-9.]{4,20}(?<!\.)$"
-PATRON_PASSWORD = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" #NOSONAR
+PATRON_PASSWORD = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$" #NOSONAR
 
 ERROR_CORREO = "Correo inválido."
 ERROR_SOLO_LETRAS = "Solo letras."

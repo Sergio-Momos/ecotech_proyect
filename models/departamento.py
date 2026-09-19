@@ -5,15 +5,11 @@ from utils.validaciones import validar_con_patron, validar_id
 
 class Departamento:
     def __init__(self, id: int, nombre: str, gerente: Empleado) -> None:
-        self._validar_id(id)
+        validar_id(id, "El id")
         self._id = id
         self.nombre = nombre
         self._empleados = []
         self.gerente = gerente
-
-        @staticmethod
-        def _validar_id(valor: int) -> None:
-            validar_id(valor, "El id")
 
     @property
     def id(self) -> int:
@@ -63,14 +59,11 @@ class Departamento:
         raise ValueError(f"El empleado con id {empleado.id} no pertenece a este departamento.")
 
     def buscar_empleado(self, id: int) -> Empleado:
-            # Reutilizamos tu validador estático para asegurarnos de que el ID ingresado es válido
-            self._validar_id(id)
-            
-            for e in self._empleados:
-                if e.id == id:
-                    return e
-
-            raise ValueError(f"No se encontró un empleado con id {id} en este departamento.")
+        validar_id(id, "El id")
+        for e in self._empleados:
+            if e.id == id:
+                return e
+        raise ValueError(f"No se encontró un empleado con id {id} en este departamento.")
 
     def reasignar_empleado(self, empleado: Empleado, destino: "Departamento") -> None:
         if not isinstance(destino, Departamento):

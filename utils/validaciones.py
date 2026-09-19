@@ -2,7 +2,6 @@ import re
 
 from .constantes import PATRON_RUT
 
-
 def validar_texto(valor: str, campo: str) -> str:
     if not isinstance(valor, str):
         raise TypeError(f"{campo} debe ser un texto.")

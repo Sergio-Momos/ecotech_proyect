@@ -19,25 +19,25 @@ Este documento registra el estado observado directamente en el repositorio. Una 
 - [x] `Rol`: permisos encapsulados y método `tiene_permiso()`.
 - [x] `Usuario`: Implementado sistema de validacion de contraseña Y HASHEO 
 - [x] `Departamento`: archivo creado, sin implementación.
-- [ ] `Proyecto`: archivo creado, sin implementación.
-- [ ] `RegistroTiempo`: archivo creado, sin implementación.
-- [ ] `Informe`: archivo creado, sin implementación.
+- [x] `Proyecto`: archivo creado, sin implementación.
+- [x] `RegistroTiempo`: archivo creado, sin implementación.
+- [x] `Informe`: archivo creado, sin implementación.
 - [x] `Seguridad`: PENDIENTE VER CIFRADO
 
 ### Relaciones y métodos del modelo
 
 - [x] Herencia `Empleado` → `Persona`.
-- [ ] Composición `Empleado` — `Usuario`.
+- [x] Composición `Empleado` — `Usuario`.
 - [ ] Composición `Empleado` — `RegistroTiempo`.
-- [ ] Agregación `Departamento` — `Empleado`.
-- [ ] Asociación N:M `Empleado` — `Proyecto`.
-- [ ] Asociación `RegistroTiempo` — `Proyecto`.
-- [ ] Asociación `Usuario` — `Rol`.
-- [ ] Dependencia `Usuario` → `Seguridad`.
+- [x] Agregación `Departamento` — `Empleado`.
+- [x] Asociación N:M `Empleado` — `Proyecto`.
+- [x] Asociación `RegistroTiempo` — `Proyecto`.
+- [x] Asociación `Usuario` — `Rol`.
+- [x] Dependencia `Usuario` → `Seguridad`.
 - [ ] Dependencias de `Informe` con departamento, proyecto y registros de tiempo.
-- [ ] Métodos de gestión de `Departamento` y `Proyecto`.
+- [x] Métodos de gestión de `Departamento` y `Proyecto`.
 - [ ] Autenticación de usuario y cierre de sesión.
-- [ ] Generación y exportación de informes.
+- [x] Generación y exportación de informes.
 
 ## Paso 2: Principios de programación orientada a objetos
 
