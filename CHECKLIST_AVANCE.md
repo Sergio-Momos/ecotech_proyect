@@ -28,7 +28,7 @@ Este documento registra el estado observado directamente en el repositorio. Una 
 
 - [x] Herencia `Empleado` → `Persona`.
 - [x] Composición `Empleado` — `Usuario`.
-- [ ] Composición `Empleado` — `RegistroTiempo`.
+- [x] Composición `Empleado` — `RegistroTiempo`.
 - [x] Agregación `Departamento` — `Empleado`.
 - [x] Asociación N:M `Empleado` — `Proyecto`.
 - [x] Asociación `RegistroTiempo` — `Proyecto`.

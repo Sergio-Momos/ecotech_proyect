@@ -7,7 +7,8 @@ from models.rol import Rol
 from models.usuario import Usuario
 from models.seguridad import Seguridad
 from models.informe import Informe
-
+from models.usuario import Usuario
+from database.conexion import probar_conexion
 
 def separador(titulo: str) -> None:
     print("\n" + "=" * 60)
@@ -70,7 +71,7 @@ def main():
     rol_rrhh = Rol.recursos_humanos()
     print(f"Rol: {rol_rrhh} | permisos: {rol_rrhh.permisos}")
 
-    usuario_ana = Usuario(id=1, username="ana.torres", password="Clave#2024") #NOSONAR
+    usuario_ana = Usuario(id=1, username="ana.torres", password="Clave#2024", rol=rol_rrhh) #NOSONAR
     print(usuario_ana)
     print(f"Hash guardado internamente (solo para depurar, nunca así en la app real): {usuario_ana._password}")
 
@@ -78,6 +79,7 @@ def main():
     print("  Clave correcta   ->", Seguridad.verificar_password("Clave#2024", usuario_ana._password))
     print("  Clave incorrecta ->", Seguridad.verificar_password("otraClave", usuario_ana._password))
 
+    """
     # --- 6. Informe (recibe filas ya "aplanadas", nunca objetos de dominio) ---
     separador("6. Informe")
     filas = [
@@ -91,7 +93,37 @@ def main():
     print(f"Informe generado el {informe_empleados.fecha_generacion}")
     print(f"PDF   -> {ruta_pdf}")
     print(f"Excel -> {ruta_excel}")
+    """
+        # --- 7. crear_usuario end-to-end, incluyendo colisión de nombres ---
+    separador("7. crear_usuario (Empleado -> Usuario, con colisión)")
 
+    rol_empleado = Rol("Empleado")  # o el classmethod que hayas definido para este rol
+
+    usuario_de_ana = ana.crear_usuario(password="ClaveAna#1", rol=rol_rrhh) #NOSONAR
+    print(f"Usuario generado para Ana: {usuario_de_ana.username}")
+
+    # Segundo "Sergio Morales" a propósito, para forzar la colisión
+    sergio1 = Empleado(
+        id=3, nombre="Sergio Morales", direccion="Calle Uno 111",
+        telefono="911111111", correo="sergio1@ecotech.cl",
+        rut="333333333", salario=600000, fecha_inicio_contrato=date(2024, 1, 1),
+    )
+    sergio2 = Empleado(
+        id=4, nombre="Sergio Morales", direccion="Calle Dos 222",
+        telefono="922222222", correo="sergio2@ecotech.cl",
+        rut="444444444", salario=610000, fecha_inicio_contrato=date(2024, 2, 1),
+    )
+    usuario1 = sergio1.crear_usuario(password="ClaveUno#1", rol=rol_empleado) #NOSONAR
+    usuario2 = sergio2.crear_usuario(password="ClaveDos#1", rol=rol_empleado) #NOSONAR
+    print(f"Sergio 1 -> username: {usuario1.username}")
+    print(f"Sergio 2 -> username: {usuario2.username}")
+    assert usuario1.username != usuario2.username, "¡Colisión no resuelta!"
+    print("Colisión resuelta correctamente: usernames distintos.")
+
+    # --- 8. Probar conexión a la base de datos ---
+    separador("8. Conexion a MySQL")
+    if probar_conexion():
+        print("Conexión exitosa a la base de datos.")
 
 if __name__ == "__main__":
     main()

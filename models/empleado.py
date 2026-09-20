@@ -3,10 +3,11 @@ from typing import TYPE_CHECKING
 from .persona import Persona
 from .registro_tiempo import RegistroTiempo
 
+from .usuario import Usuario
+
 if TYPE_CHECKING:
     from .proyecto import Proyecto
     from .rol import Rol
-    from .usuario import Usuario
 
 class Empleado(Persona):
     """Persona contratada por EcoTech.
