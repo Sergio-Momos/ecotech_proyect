@@ -4,16 +4,24 @@ from utils.validaciones import validar_con_patron, validar_id
 
 
 class Departamento:
-    def __init__(self, id: int, nombre: str, gerente: Empleado) -> None:
-        validar_id(id, "El id")
-        self._id = id
+    def __init__(self, id: int | None, nombre: str, gerente: Empleado) -> None:
+        self._id = None
+        if id is not None:
+            self.id = id
         self.nombre = nombre
         self._empleados = []
         self.gerente = gerente
 
     @property
-    def id(self) -> int:
+    def id(self) -> int | None:
         return self._id
+
+    @id.setter
+    def id(self, valor: int) -> None:
+        if self._id is not None:
+            raise AttributeError("El id ya fue asignado y no puede modificarse.")
+        validar_id(valor, "El id")
+        self._id = valor
 
     @property
     def nombre(self) -> str:

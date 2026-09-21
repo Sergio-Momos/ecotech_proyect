@@ -1,6 +1,6 @@
 import mysql.connector
 from mysql.connector import Error
-
+from contextlib import contextmanager
 from config import DB_CONFIG
 
 
@@ -24,4 +24,13 @@ def probar_conexion() -> bool:
 
 probar_conexion()  # Llamada para probar la conexión al iniciar el módulo
 
-    # contraseña acuerdate: Pablit0$hile
+
+@contextmanager
+def cursor_db(dictionary: bool = False):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=dictionary)
+    try:
+        yield cursor, conexion
+        conexion.commit()
+    finally:
+        conexion.close()

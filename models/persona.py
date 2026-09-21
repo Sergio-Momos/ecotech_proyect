@@ -26,34 +26,32 @@ class Persona:
 
     def __init__(
         self,
-        id: int,
+        id: int | None,
         nombre: str,
         direccion: str,
         telefono: str,
         correo: str,
         rut: str,
     ) -> None:
-        self._validar_id(id)
-        self._id = id
+        self._id = None
+        if id is not None:
+            self.id = id  # pasa por el setter, con su validación
         self.nombre = nombre
         self.direccion = direccion
         self.telefono = telefono
         self.correo = correo
         self.rut = rut
 
-    @staticmethod
-    def _validar_texto(valor: str, campo: str) -> str:
-        """Mantiene un punto común de validación para la clase."""
-        return validar_texto(valor, campo)
-
-    @staticmethod
-    def _validar_id(valor: int) -> None:
-        validar_id(valor, "El id")
-
     @property
-    def id(self) -> int:
-        """Identificador inmutable de la persona."""
+    def id(self) -> int | None:
         return self._id
+
+    @id.setter
+    def id(self, valor: int) -> None:
+        if self._id is not None:
+            raise AttributeError("El id ya fue asignado y no puede modificarse.")
+        validar_id(valor, "El id")
+        self._id = valor
 
     @property
     def nombre(self) -> str:
@@ -71,7 +69,7 @@ class Persona:
 
     @direccion.setter
     def direccion(self, valor: str) -> None:
-        self._direccion = self._validar_texto(valor, "La dirección")
+        self._direccion = validar_texto(valor, "La dirección")
 
     @property
     def telefono(self) -> str:
@@ -79,7 +77,9 @@ class Persona:
 
     @telefono.setter
     def telefono(self, valor: str) -> None:
-        self._telefono = validar_con_patron(valor, "El teléfono", PATRON_TELEFONO, ERROR_TELEFONO)
+        self._telefono = validar_con_patron(
+            valor, "El teléfono", PATRON_TELEFONO, ERROR_TELEFONO
+        )
 
     @property
     def correo(self) -> str:

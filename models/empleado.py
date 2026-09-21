@@ -15,7 +15,7 @@ class Empleado(Persona):
 
     def __init__(
         self,
-        id: int,
+        id: int | None,
         nombre: str,
         direccion: str,
         telefono: str,

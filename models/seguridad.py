@@ -1,6 +1,9 @@
 import hashlib
 import secrets
 
+from cryptography.fernet import Fernet
+from config import FERNET_KEY
+
 class Seguridad:
     """Utilidades de seguridad: hash de contraseñas.
     Cifrado de datos sensibles (cifrar_datos/descifrar_datos): pendiente,
@@ -34,3 +37,28 @@ class Seguridad:
             Seguridad._ITERACIONES,
         )
         return hash_bytes.hex()
+
+    _fernet = Fernet(FERNET_KEY.encode()) if FERNET_KEY else None
+
+    @staticmethod
+    def cifrar_datos(dato: str) -> str:
+        if Seguridad._fernet is None:
+            raise RuntimeError("FERNET_KEY no configurada.")
+        return Seguridad._fernet.encrypt(dato.encode()).decode()
+
+    @staticmethod
+    def descifrar_datos(dato_cifrado: str) -> str:
+        if Seguridad._fernet is None:
+            raise RuntimeError("FERNET_KEY no configurada.")
+        return Seguridad._fernet.decrypt(dato_cifrado.encode()).decode()
+
+
+    @staticmethod
+    def hash_busqueda(dato: str) -> str:
+        """
+        Hash determinístico (SIN salt) para poder verificar unicidad sin
+        descifrar. A diferencia de hashear_password, aquí NO queremos salt:
+        necesitamos que el mismo dato siempre produzca el mismo hash, para
+        poder comparar con `WHERE rut_hash = %s`. (Esto resuelve un problema: Unicidad de RUT al hacer comparaciones )
+        """
+        return hashlib.sha256(dato.encode("utf-8")).hexdigest()

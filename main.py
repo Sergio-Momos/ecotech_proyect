@@ -125,5 +125,53 @@ def main():
     if probar_conexion():
         print("Conexión exitosa a la base de datos.")
 
+        # --- 9. Probar empleado_repo contra MySQL real ---
+    separador("9. empleado_repo: crear, buscar, actualizar, eliminar")
+
+    from repositorios import empleado_repo
+
+    nuevo = Empleado(
+        id=None,  # todavía no existe en la BD
+        nombre="Camila Rios", direccion="Av. Siempre Viva 742",
+        telefono="933333333", correo="camila.rios@ecotech.cl",
+        rut="20.730.332-1",  # con puntos y guion, a propósito, para probar normalizar_rut
+        salario=725450.50, fecha_inicio_contrato=date(2024, 4, 20),
+    )
+    print(f"Antes de crear -> id: {nuevo.id}")
+
+    id_generado = empleado_repo.crear(nuevo)
+    print(f"Después de crear -> id: {nuevo.id} (retornado: {id_generado})")
+    assert nuevo.id == id_generado, "El id del objeto no quedó sincronizado."
+
+    recuperado = empleado_repo.buscar_por_id(nuevo.id)
+    print(f"Recuperado desde la BD: {recuperado}")
+    print(f"  correo: {recuperado.correo} (¿coincide? {recuperado.correo == nuevo.correo})")
+    print(f"  rut:    {recuperado.rut} (¿coincide? {recuperado.rut == nuevo.rut})")
+    print(f"  salario: {recuperado.salario} (¿coincide? {recuperado.salario == nuevo.salario})")
+
+    print("\nProbando RUT duplicado (debería rechazar):")
+    try:
+        empleado_repo.crear(Empleado(
+            id=None, nombre="Otro Nombre", direccion="Otra 123",
+            telefono="944444444", correo="otro@ecotech.cl",
+            rut="207303321",  # mismo RUT, sin puntos ni guion esta vez
+            salario=500000, fecha_inicio_contrato=date(2024, 1, 1),
+        ))
+    except ValueError as e:
+        print(f"  Rechazado correctamente -> {e}")
+
+    print("\nActualizando salario...")
+    recuperado.salario = 800000.0
+    empleado_repo.actualizar(recuperado)
+    releido = empleado_repo.buscar_por_id(recuperado.id)
+    print(f"  Salario tras releer desde la BD: {releido.salario} (¿coincide? {releido.salario == 800000.0})")
+
+    print(f"\nTotal empleados en la BD: {len(empleado_repo.listar_todos())}")
+    
+    print("\nLimpiando datos de prueba...")
+    empleado_repo.eliminar(nuevo.id)
+    assert empleado_repo.buscar_por_id(nuevo.id) is None, "¡No se eliminó correctamente!"
+    print("Eliminado y confirmado.")
+    
 if __name__ == "__main__":
     main()
