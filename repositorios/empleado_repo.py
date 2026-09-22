@@ -1,6 +1,4 @@
-from datetime import date
-
-from database.conexion import obtener_conexion, cursor_db
+from database.conexion import cursor_db
 from models.empleado import Empleado
 from models.seguridad import Seguridad
 
@@ -107,3 +105,16 @@ def actualizar(empleado: Empleado) -> None:
 def eliminar(id_empleado: int) -> None:
     with cursor_db() as (cursor, _):
         cursor.execute("DELETE FROM empleados WHERE id = %s", (id_empleado,))
+
+def listar_por_proyecto(proyecto_id: int) -> list[Empleado]:
+    with cursor_db(dictionary=True) as (cursor, _):
+        cursor.execute(
+            """
+            SELECT e.* FROM empleados e
+            JOIN empleados_proyectos ep ON e.id = ep.empleado_id
+            WHERE ep.proyecto_id = %s
+            """,
+            (proyecto_id,),
+        )
+        filas = cursor.fetchall()
+    return [_fila_a_empleado(fila) for fila in filas]

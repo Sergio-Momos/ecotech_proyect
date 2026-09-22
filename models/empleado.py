@@ -29,6 +29,7 @@ class Empleado(Persona):
         self.fecha_inicio_contrato = fecha_inicio_contrato
         self._proyectos = []  # lista de proyectos a los que pertenece el empleado
         self._registros_tiempo = []  # lista de registros de tiempo del empleado
+        self._usuario = None
 
     @property
     def salario(self) -> float:
@@ -106,3 +107,8 @@ class Empleado(Persona):
     @property
     def usuario(self) -> "Usuario":
         return self._usuario
+
+    def _agregar_registro_tiempo(self, registro: "RegistroTiempo") -> None:
+    # sin revalidar topes — se usa solo para reconstruir historial ya
+    # validado desde la BD, no para registrar horas nuevas
+        self._registros_tiempo.append(registro)

@@ -1,5 +1,4 @@
 import unicodedata
-import unicodedata
 
 from .seguridad import Seguridad
 from .rol import Rol

@@ -45,7 +45,8 @@ CREATE TABLE proyectos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     descripcion TEXT NOT NULL,
-    fecha_inicio DATE NOT NULL
+    fecha_inicio DATE NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE empleados_proyectos (

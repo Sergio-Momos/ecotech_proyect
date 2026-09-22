@@ -1,6 +1,5 @@
 from datetime import date
 from typing import Any
-import openpyxl
 
 from openpyxl import Workbook
 from reportlab.lib import colors

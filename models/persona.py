@@ -17,12 +17,6 @@ from utils.validaciones import (
 
 
 class Persona:
-    """Datos personales comunes a las personas registradas en EcoTech.
-
-    Es la clase base de ``Empleado``. No conoce aún relaciones con
-    departamentos, proyectos ni usuarios: esas responsabilidades pertenecen
-    a las clases que las modelan.
-    """
 
     def __init__(
         self,

@@ -5,10 +5,6 @@ from cryptography.fernet import Fernet
 from config import FERNET_KEY
 
 class Seguridad:
-    """Utilidades de seguridad: hash de contraseñas.
-    Cifrado de datos sensibles (cifrar_datos/descifrar_datos): pendiente,
-    decisión de equipo — ver notas del proyecto.
-    """
 
     _ITERACIONES = 100_000
     _LARGO_SALT = 16  # bytes

@@ -6,9 +6,8 @@ from models.proyecto import Proyecto
 from models.rol import Rol
 from models.usuario import Usuario
 from models.seguridad import Seguridad
-from models.informe import Informe
-from models.usuario import Usuario
 from database.conexion import probar_conexion
+
 
 def separador(titulo: str) -> None:
     print("\n" + "=" * 60)
@@ -18,7 +17,7 @@ def separador(titulo: str) -> None:
 
 def main():
     # --- 1. Empleados (Persona + herencia) ---
-    separador("1. Creando empleados")
+    separador("1. Creando empleados (en memoria)")
     ana = Empleado(
         id=1, nombre="Ana Torres", direccion="Los Alerces 123",
         telefono="912345678", correo="ana.torres@ecotech.cl",
@@ -32,34 +31,26 @@ def main():
     print(ana)
     print(juan)
 
-    # --- 2. Departamento (agregación) ---
-    separador("2. Departamento")
+    # --- 2. Departamento (agregación, en memoria) ---
+    separador("2. Departamento (en memoria)")
     rrhh = Departamento(id=1, nombre="RecursosHumanos", gerente=ana)
     rrhh.agregar_empleado(ana)
     rrhh.agregar_empleado(juan)
     print(f"Departamento: {rrhh.nombre} | Gerente: {rrhh.gerente.get_nombre_completo()}")
-    print(f"Empleados: {[e.get_nombre_completo() for e in rrhh.empleados]}")
 
-    # --- 3. Proyecto (asociación N:M) ---
-    separador("3. Proyecto")
+    # --- 3. Proyecto (N:M, en memoria) ---
+    separador("3. Proyecto (en memoria)")
     proyecto_solar = Proyecto(
         id=1, nombre="PanelesSolares",
         descripcion="Instalacion de paneles solares en oficina central",
         fecha_inicio=date(2024, 1, 10),
     )
     proyecto_solar.asignar_empleado(ana)
-    proyecto_solar.asignar_empleado(juan)
-    print(f"Proyecto: {proyecto_solar.nombre}")
     print(f"Participantes: {[e.get_nombre_completo() for e in proyecto_solar.empleados]}")
-    print(f"Proyectos de Ana (vista desde Empleado): {[p.nombre for p in ana.proyectos]}")
 
-    # --- 4. RegistroTiempo (composición) + topes legales ---
-    separador("4. Registro de horas")
+    # --- 4. RegistroTiempo (composición) + topes legales, en memoria ---
+    separador("4. Registro de horas (en memoria) + tope diario")
     ana.registrar_horas(date(2024, 9, 2), 6, "Instalacion de paneles", proyecto_solar)
-    ana.registrar_horas(date(2024, 9, 3), 8, "Configuracion de inversor", proyecto_solar)
-    for r in ana.registros_tiempo:
-        print(f"  {r.fecha} - {r.horas_trabajadas}h - {r.descripcion} ({r.proyecto.nombre})")
-
     print("\nProbando tope diario (debería rechazar):")
     try:
         ana.registrar_horas(date(2024, 9, 2), 6, "Horas extra el mismo dia", proyecto_solar)
@@ -69,40 +60,20 @@ def main():
     # --- 5. Usuario + Rol + Seguridad ---
     separador("5. Usuario, Rol y Seguridad")
     rol_rrhh = Rol.recursos_humanos()
-    print(f"Rol: {rol_rrhh} | permisos: {rol_rrhh.permisos}")
+    rol_empleado = Rol.empleado_estandar()
+    print(f"Rol RRHH: permisos={rol_rrhh.permisos}")
+    print(f"Rol Empleado: permisos={rol_empleado.permisos}")
 
-    usuario_ana = Usuario(id=1, username="ana.torres", password="Clave#2024", rol=rol_rrhh) #NOSONAR
-    print(usuario_ana)
-    print(f"Hash guardado internamente (solo para depurar, nunca así en la app real): {usuario_ana._password}")
-
+    usuario_ana = Usuario(id=1, username="a.torres", password="Clave#2024", rol=rol_rrhh)  # NOSONAR
     print("\nVerificando login:")
     print("  Clave correcta   ->", Seguridad.verificar_password("Clave#2024", usuario_ana._password))
     print("  Clave incorrecta ->", Seguridad.verificar_password("otraClave", usuario_ana._password))
 
-    """
-    # --- 6. Informe (recibe filas ya "aplanadas", nunca objetos de dominio) ---
-    separador("6. Informe")
-    filas = [
-        {"nombre": e.get_nombre_completo(), "rut": e.rut, "salario": e.salario}
-        for e in rrhh.empleados
-    ]
-    informe_empleados = Informe(tipo=Informe.TIPO_EMPLEADOS)
-    informe_empleados.generar_informe(filas)
-    ruta_pdf = informe_empleados.exportar_pdf("informe_empleados.pdf")
-    ruta_excel = informe_empleados.exportar_excel("informe_empleados.xlsx")
-    print(f"Informe generado el {informe_empleados.fecha_generacion}")
-    print(f"PDF   -> {ruta_pdf}")
-    print(f"Excel -> {ruta_excel}")
-    """
-        # --- 7. crear_usuario end-to-end, incluyendo colisión de nombres ---
-    separador("7. crear_usuario (Empleado -> Usuario, con colisión)")
-
-    rol_empleado = Rol("Empleado")  # o el classmethod que hayas definido para este rol
-
-    usuario_de_ana = ana.crear_usuario(password="ClaveAna#1", rol=rol_rrhh) #NOSONAR
+    # --- 6. crear_usuario end-to-end, con colisión de nombres ---
+    separador("6. crear_usuario (Empleado -> Usuario, con colisión)")
+    usuario_de_ana = ana.crear_usuario(password="ClaveAna#1", rol=rol_rrhh)  # NOSONAR
     print(f"Usuario generado para Ana: {usuario_de_ana.username}")
 
-    # Segundo "Sergio Morales" a propósito, para forzar la colisión
     sergio1 = Empleado(
         id=3, nombre="Sergio Morales", direccion="Calle Uno 111",
         telefono="911111111", correo="sergio1@ecotech.cl",
@@ -113,65 +84,139 @@ def main():
         telefono="922222222", correo="sergio2@ecotech.cl",
         rut="444444444", salario=610000, fecha_inicio_contrato=date(2024, 2, 1),
     )
-    usuario1 = sergio1.crear_usuario(password="ClaveUno#1", rol=rol_empleado) #NOSONAR
-    usuario2 = sergio2.crear_usuario(password="ClaveDos#1", rol=rol_empleado) #NOSONAR
-    print(f"Sergio 1 -> username: {usuario1.username}")
-    print(f"Sergio 2 -> username: {usuario2.username}")
+    usuario1 = sergio1.crear_usuario(password="ClaveUno#1", rol=rol_empleado)  # NOSONAR
+    usuario2 = sergio2.crear_usuario(password="ClaveDos#1", rol=rol_empleado)  # NOSONAR
     assert usuario1.username != usuario2.username, "¡Colisión no resuelta!"
-    print("Colisión resuelta correctamente: usernames distintos.")
+    print(f"Colisión resuelta: {usuario1.username} / {usuario2.username}")
 
-    # --- 8. Probar conexión a la base de datos ---
-    separador("8. Conexion a MySQL")
+    # --- 7. Conexion a MySQL ---
+    separador("7. Conexion a MySQL")
     if probar_conexion():
         print("Conexión exitosa a la base de datos.")
 
-        # --- 9. Probar empleado_repo contra MySQL real ---
-    separador("9. empleado_repo: crear, buscar, actualizar, eliminar")
+    # ================================================================
+    # A partir de acá, todo pasa por los repositorios contra MySQL real
+    # ================================================================
+    from repositorios import empleado_repo, departamento_repo, proyecto_repo, registro_tiempo_repo
 
-    from repositorios import empleado_repo
-
-    nuevo = Empleado(
-        id=None,  # todavía no existe en la BD
-        nombre="Camila Rios", direccion="Av. Siempre Viva 742",
+    # --- 8. empleado_repo: crear dos empleados reales para el resto de las pruebas ---
+    separador("8. empleado_repo: creando empleados de prueba")
+    camila = Empleado(
+        id=None, nombre="Camila Rios", direccion="Av. Siempre Viva 742",
         telefono="933333333", correo="camila.rios@ecotech.cl",
-        rut="20.730.332-1",  # con puntos y guion, a propósito, para probar normalizar_rut
-        salario=725450.50, fecha_inicio_contrato=date(2024, 4, 20),
+        rut="18.765.432-7", salario=725450.50, fecha_inicio_contrato=date(2024, 4, 20),
     )
-    print(f"Antes de crear -> id: {nuevo.id}")
-
-    id_generado = empleado_repo.crear(nuevo)
-    print(f"Después de crear -> id: {nuevo.id} (retornado: {id_generado})")
-    assert nuevo.id == id_generado, "El id del objeto no quedó sincronizado."
-
-    recuperado = empleado_repo.buscar_por_id(nuevo.id)
-    print(f"Recuperado desde la BD: {recuperado}")
-    print(f"  correo: {recuperado.correo} (¿coincide? {recuperado.correo == nuevo.correo})")
-    print(f"  rut:    {recuperado.rut} (¿coincide? {recuperado.rut == nuevo.rut})")
-    print(f"  salario: {recuperado.salario} (¿coincide? {recuperado.salario == nuevo.salario})")
+    pedro = Empleado(
+        id=None, nombre="Pedro Soto", direccion="Los Aromos 55",
+        telefono="955555555", correo="pedro.soto@ecotech.cl",
+        rut="19.876.543-0", salario=690000, fecha_inicio_contrato=date(2024, 5, 2),
+    )
+    empleado_repo.crear(camila)
+    empleado_repo.crear(pedro)
+    print(f"Camila -> id: {camila.id} | Pedro -> id: {pedro.id}")
 
     print("\nProbando RUT duplicado (debería rechazar):")
     try:
         empleado_repo.crear(Empleado(
             id=None, nombre="Otro Nombre", direccion="Otra 123",
             telefono="944444444", correo="otro@ecotech.cl",
-            rut="207303321",  # mismo RUT, sin puntos ni guion esta vez
+            rut="187654327",  # mismo RUT de Camila, sin puntos ni guion
             salario=500000, fecha_inicio_contrato=date(2024, 1, 1),
         ))
     except ValueError as e:
         print(f"  Rechazado correctamente -> {e}")
 
-    print("\nActualizando salario...")
-    recuperado.salario = 800000.0
-    empleado_repo.actualizar(recuperado)
-    releido = empleado_repo.buscar_por_id(recuperado.id)
-    print(f"  Salario tras releer desde la BD: {releido.salario} (¿coincide? {releido.salario == 800000.0})")
+    recuperada = empleado_repo.buscar_por_id(camila.id)
+    print(f"Releída desde la BD: {recuperada} | correo coincide: {recuperada.correo == camila.correo}")
 
-    print(f"\nTotal empleados en la BD: {len(empleado_repo.listar_todos())}")
-    
-    print("\nLimpiando datos de prueba...")
-    empleado_repo.eliminar(nuevo.id)
-    assert empleado_repo.buscar_por_id(nuevo.id) is None, "¡No se eliminó correctamente!"
-    print("Eliminado y confirmado.")
-    
+    # --- 9. departamento_repo: crear, asignar empleados, actualizar ---
+    separador("9. departamento_repo")
+    depto = Departamento(id=None, nombre="Operaciones", gerente=camila)
+    departamento_repo.crear(depto)
+    print(f"Departamento creado -> id: {depto.id}")
+
+    departamento_repo.asignar_empleado(depto.id, pedro.id)
+    depto_recuperado = departamento_repo.buscar_por_id(depto.id)
+    print(f"Gerente recuperado: {depto_recuperado.gerente.get_nombre_completo()}")
+    print(f"Empleados del depto: {[e.get_nombre_completo() for e in depto_recuperado.empleados]}")
+    assert any(e.id == pedro.id for e in depto_recuperado.empleados), "Pedro no quedó asignado."
+
+    depto_recuperado.nombre = "OperacionesTecnicas"
+    departamento_repo.actualizar(depto_recuperado)
+    print(f"Nombre tras actualizar: {departamento_repo.buscar_por_id(depto.id).nombre}")
+
+    # --- 10. proyecto_repo: crear, asignar N:M, borrado lógico ---
+    separador("10. proyecto_repo")
+    proyecto = Proyecto(
+        id=None, nombre="ExpansionSolar",
+        descripcion="Segunda etapa de paneles solares",
+        fecha_inicio=date(2025, 1, 15),
+    )
+    proyecto_repo.crear(proyecto)
+    proyecto_repo.asignar_empleado(proyecto.id, camila.id)
+    proyecto_repo.asignar_empleado(proyecto.id, pedro.id)
+
+    proyecto_recuperado = proyecto_repo.buscar_por_id(proyecto.id)
+    print(f"Participantes: {[e.get_nombre_completo() for e in proyecto_recuperado.empleados]}")
+    assert len(proyecto_recuperado.empleados) == 2
+
+    print("\nProbando borrado lógico con un proyecto aparte:")
+    proyecto_temporal = Proyecto(
+        id=None, nombre="PilotoDescartable",
+        descripcion="Proyecto de prueba para el borrado logico",
+        fecha_inicio=date(2025, 2, 1),
+    )
+    proyecto_repo.crear(proyecto_temporal)
+    proyecto_repo.eliminar(proyecto_temporal.id)
+    activos = proyecto_repo.listar_todos()
+    todos = proyecto_repo.listar_todos(incluir_inactivos=True)
+    print(f"  Aparece en listar_todos() por defecto? {any(p.id == proyecto_temporal.id for p in activos)}")
+    print(f"  Aparece incluyendo inactivos?          {any(p.id == proyecto_temporal.id for p in todos)}")
+    print(f"  Sigue siendo consultable por id?       {proyecto_repo.buscar_por_id(proyecto_temporal.id).activo}")
+
+    # --- 11. registro_tiempo_repo: el flujo completo, incluyendo cargar_historial ---
+    separador("11. registro_tiempo_repo — por qué cargar_historial() importa")
+
+    camila_sesion_1 = empleado_repo.buscar_por_id(camila.id)
+    registro_tiempo_repo.cargar_historial(camila_sesion_1)  # aún vacío, primera vez
+    r1 = camila_sesion_1.registrar_horas(date(2025, 3, 3), 6, "Terreno inicial", proyecto)
+    registro_tiempo_repo.crear(r1)
+    print(f"Registro creado -> id: {r1.id}, {r1.horas_trabajadas}h el {r1.fecha}")
+
+    print("\nSimulando cerrar y reabrir el programa (nuevo objeto Empleado desde la BD):")
+    camila_sesion_2 = empleado_repo.buscar_por_id(camila.id)
+    print(f"  Registros en memoria antes de cargar_historial: {len(camila_sesion_2.registros_tiempo)}")
+    registro_tiempo_repo.cargar_historial(camila_sesion_2)
+    print(f"  Registros en memoria después de cargar_historial: {len(camila_sesion_2.registros_tiempo)}")
+
+    print("\nProbando que el tope diario SIGUE funcionando tras recargar (debería rechazar, 6+5=11h):")
+    try:
+        camila_sesion_2.registrar_horas(date(2025, 3, 3), 5, "Horas extra el mismo dia", proyecto)
+    except ValueError as e:
+        print(f"  Rechazado correctamente -> {e}")
+
+    r2 = camila_sesion_2.registrar_horas(date(2025, 3, 4), 4, "Terreno dia 2", proyecto)
+    registro_tiempo_repo.crear(r2)
+
+    print("\nActualizando horas del primer registro...")
+    r1.horas_trabajadas = 7
+    registro_tiempo_repo.actualizar(r1)
+    print(f"  Tras releer: {registro_tiempo_repo.buscar_por_id(r1.id).horas_trabajadas}h")
+
+    print(f"\nRegistros de Camila (listar_por_empleado): {len(registro_tiempo_repo.listar_por_empleado(camila.id))}")
+    print(f"Registros del proyecto (listar_por_proyecto): {len(registro_tiempo_repo.listar_por_proyecto(proyecto.id))}")
+
+    # --- 12. Limpieza final (orden importa por las FK) ---
+    separador("12. Limpiando datos de prueba")
+    registro_tiempo_repo.eliminar(r1.id)
+    registro_tiempo_repo.eliminar(r2.id)
+    departamento_repo.eliminar(depto.id)      # antes que los empleados: gerente_id es RESTRICT
+    empleado_repo.eliminar(camila.id)
+    empleado_repo.eliminar(pedro.id)
+    assert empleado_repo.buscar_por_id(camila.id) is None
+    assert empleado_repo.buscar_por_id(pedro.id) is None
+    print("Todo limpio.")
+
+
 if __name__ == "__main__":
     main()

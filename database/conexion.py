@@ -21,10 +21,6 @@ def probar_conexion() -> bool:
     finally:
         conexion.close()
 
-
-probar_conexion()  # Llamada para probar la conexión al iniciar el módulo
-
-
 @contextmanager
 def cursor_db(dictionary: bool = False):
     conexion = obtener_conexion()

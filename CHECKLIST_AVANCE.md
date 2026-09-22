@@ -8,7 +8,7 @@ Este documento registra el estado observado directamente en el repositorio. Una 
 
 - [ ] Prototipo estructural completo que traduzca el UML validado a Python.
 - [ ] Aplicación demostrable de encapsulamiento y reutilización mediante POO.
-- [ ] Conexión exitosa a una base de datos desde el programa.
+- [x] Conexión exitosa a una base de datos desde el programa.
 
 ## Paso 1: Modelo UML en Python
 
@@ -34,7 +34,7 @@ Este documento registra el estado observado directamente en el repositorio. Una 
 - [x] Asociación `RegistroTiempo` — `Proyecto`.
 - [x] Asociación `Usuario` — `Rol`.
 - [x] Dependencia `Usuario` → `Seguridad`.
-- [ ] Dependencias de `Informe` con departamento, proyecto y registros de tiempo.
+- [x] Dependencias de `Informe` con departamento, proyecto y registros de tiempo.
 - [x] Métodos de gestión de `Departamento` y `Proyecto`.
 - [ ] Autenticación de usuario y cierre de sesión.
 - [x] Generación y exportación de informes.
@@ -52,11 +52,11 @@ Este documento registra el estado observado directamente en el repositorio. Una 
 ## Paso 3: Base de datos
 
 - [x] Estructura de carpeta `database/` creada.
-- [ ] Configuración de la conexión en `database/conexion.py`.
-- [ ] Esquema SQL con tablas persistentes en `database/esquema.sql`.
-- [ ] Prueba de conexión exitosa desde Python con una librería oficial.
-- [ ] Consultas parametrizadas para todas las operaciones SQL.
-- [ ] Persistencia mediante repositorios.
+- [x] Configuración de la conexión en `database/conexion.py`.
+- [x] Esquema SQL con tablas persistentes en `database/esquema.sql`.
+- [x] Prueba de conexión exitosa desde Python con una librería oficial.
+- [x] Consultas parametrizadas para todas las operaciones SQL.
+- [x] Persistencia mediante repositorios.
 
 ## Arquitectura del proyecto
 
@@ -69,15 +69,15 @@ Este documento registra el estado observado directamente en el repositorio. Una 
 ## Seguridad
 
 - [x] Validación de datos de entrada presente en el modelo inicial.
-- [ ] Hash de contraseñas antes de almacenarlas.
-- [ ] Verificación segura de contraseñas.
-- [ ] Cifrado y descifrado de datos, si se mantiene en el diseño definitivo.
-- [ ] SQL parametrizado en la capa de persistencia.
+- [x] Hash de contraseñas antes de almacenarlas.
+- [x] Verificación segura de contraseñas.
+- [x] Cifrado y descifrado de datos, si se mantiene en el diseño definitivo.
+- [x] SQL parametrizado en la capa de persistencia.
 
 ## Verificaciones realizadas
 
 - [x] Compilación sintáctica de los módulos Python realizada correctamente el 17 de septiembre de 2026.
-- [ ] Prueba de creación de objetos y comportamiento de cada modelo.
+- [x] Prueba de creación de objetos y comportamiento de cada modelo.
 - [ ] Prueba de conexión y operaciones CRUD de base de datos.
 - [ ] Prueba manual de las vistas de la interfaz.
 
@@ -94,3 +94,7 @@ Este documento registra el estado observado directamente en el repositorio. Una 
 - [ ] Confirmar si la autenticación será parte de `Usuario` o una clase separada.
 - [ ] Definir las firmas finales de `verificar_password`, `cifrar_datos` y `descifrar_datos`.
 - [ ] Mantener una única representación de cada relación: atributo de clase o relación gestionada por repositorio, evitando duplicación.
+
+Pendientes a futuro NO OLVIDAR:
+
+asignar_empleado() debería rechazar agregar gente a un proyecto ya desactivado

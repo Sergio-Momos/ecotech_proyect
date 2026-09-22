@@ -8,7 +8,24 @@ Cosas a tener en cuenta:
 
 3-. El motor de la BD es MySQl
 
-4-. recuerda truncar tu BD: TRUNCATE TABLE empleados, departamento, proyecto, etc;
+4-. recuerda truncar tu BD para dejar los contadores en 1 al ejecutar pruebas: 
+
+USE ecotech_rrhh;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+TRUNCATE TABLE registros_tiempo;
+TRUNCATE TABLE empleados_proyectos;
+TRUNCATE TABLE usuarios;
+TRUNCATE TABLE departamentos;
+TRUNCATE TABLE empleados;
+TRUNCATE TABLE proyectos;
+TRUNCATE TABLE roles;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+
 
 -Rol4
 

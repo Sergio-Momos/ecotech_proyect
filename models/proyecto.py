@@ -5,7 +5,7 @@ from datetime import date
 
 
 class Proyecto:
-    def __init__(self, id: int| None, nombre: str, descripcion: str, fecha_inicio: date):
+    def __init__(self, id: int| None, nombre: str, descripcion: str, fecha_inicio: date, activo: bool = True):
         self._id = None
         if id is not None:
             self.id = id
@@ -13,6 +13,7 @@ class Proyecto:
         self.descripcion = descripcion
         self.fecha_inicio = fecha_inicio
         self._empleados = []
+        self.activo = activo
     
     @property
     def id(self) -> int| None:
@@ -73,3 +74,19 @@ class Proyecto:
             raise ValueError(f"El empleado con id {empleado.id} no participa en este proyecto.")
         self._empleados = [e for e in self._empleados if e.id != empleado.id]
         empleado._quitar_proyecto(self)
+
+    @property
+    def activo(self) -> bool:
+        return self._activo
+
+    @activo.setter
+    def activo(self, valor: bool) -> None:
+        if not isinstance(valor, bool):
+            raise TypeError("El estado activo debe ser un booleano.")
+        self._activo = valor
+
+    def desactivar(self) -> None:
+        self.activo = False
+
+    def activar(self) -> None:
+        self.activo = True
