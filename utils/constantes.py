@@ -1,5 +1,5 @@
 PATRON_CORREO = r"^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$"
-PATRON_NOMBRE = r"^[a-zA-ZáéíóúÁÉÍÓÚÑñ\s'-]+$"
+PATRON_NOMBRE = r"^[a-zA-ZáéíóúÁÉÍÓÚÑñ\s']+$"
 PATRON_TELEFONO = r"^\d{8,9}$"
 PATRON_RUT = r"^\d{7,8}[\dK]$"
 PATRON_USERNAME = r"^(?!\.)(?!.*\.\.)[a-zA-Z0-9.]{4,20}(?<!\.)$"

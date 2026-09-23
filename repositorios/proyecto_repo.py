@@ -89,3 +89,6 @@ def eliminar(id_proyecto: int) -> None:
     with cursor_db() as (cursor, _):
         cursor.execute("UPDATE proyectos SET activo = FALSE WHERE id = %s", (id_proyecto,))
 
+def activar(proyecto_id: int) -> None:
+    with cursor_db() as (cursor, _):
+        cursor.execute("UPDATE proyectos SET activo = TRUE WHERE id = %s", (proyecto_id,))

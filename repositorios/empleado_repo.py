@@ -6,7 +6,7 @@ from models.seguridad import Seguridad
 def _fila_a_empleado(fila: dict) -> Empleado:
     salario_centavos = int(Seguridad.descifrar_datos(fila["salario"]))
     return Empleado(
-        id=fila["id"],
+        id=fila["id"], 
         nombre=fila["nombre"],
         direccion=Seguridad.descifrar_datos(fila["direccion"]),
         telefono=Seguridad.descifrar_datos(fila["telefono"]),
@@ -14,6 +14,7 @@ def _fila_a_empleado(fila: dict) -> Empleado:
         rut=Seguridad.descifrar_datos(fila["rut"]),
         salario=salario_centavos / 100,
         fecha_inicio_contrato=fila["fecha_inicio_contrato"],
+        activo=bool(fila["activo"]),
     )
 
 def listar_por_departamento(departamento_id: int) -> list[Empleado]:
@@ -63,11 +64,14 @@ def buscar_por_id(id_empleado: int) -> Empleado | None:
     return _fila_a_empleado(fila) if fila else None
 
 
-def listar_todos() -> list[Empleado]:
+def listar_todos(incluir_inactivos: bool = False) -> list[Empleado]:
     with cursor_db(dictionary=True) as (cursor, _):
-        cursor.execute("SELECT * FROM empleados")
+        if incluir_inactivos:
+            cursor.execute("SELECT * FROM empleados")
+        else:
+            cursor.execute("SELECT * FROM empleados WHERE activo = TRUE")
         filas = cursor.fetchall()
-    return [_fila_a_empleado(fila) for fila in filas] if filas else []
+    return [_fila_a_empleado(fila) for fila in filas]
 
 
 def actualizar(empleado: Empleado) -> None:
@@ -103,8 +107,10 @@ def actualizar(empleado: Empleado) -> None:
         )
 
 def eliminar(id_empleado: int) -> None:
+    # Borrado lógico — preserva el historial de RegistroTiempo, que de
+    # otro modo se perdería por el ON DELETE CASCADE del esquema.
     with cursor_db() as (cursor, _):
-        cursor.execute("DELETE FROM empleados WHERE id = %s", (id_empleado,))
+        cursor.execute("UPDATE empleados SET activo = FALSE WHERE id = %s", (id_empleado,))
 
 def listar_por_proyecto(proyecto_id: int) -> list[Empleado]:
     with cursor_db(dictionary=True) as (cursor, _):

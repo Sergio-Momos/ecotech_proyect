@@ -23,6 +23,7 @@ class Empleado(Persona):
         rut: str,
         salario: float,
         fecha_inicio_contrato: date,
+        activo:bool = True
     ) -> None:
         super().__init__(id, nombre, direccion, telefono, correo, rut)
         self.salario = salario
@@ -30,6 +31,7 @@ class Empleado(Persona):
         self._proyectos = []  # lista de proyectos a los que pertenece el empleado
         self._registros_tiempo = []  # lista de registros de tiempo del empleado
         self._usuario = None
+        self.activo = activo
 
     @property
     def salario(self) -> float:
@@ -112,3 +114,19 @@ class Empleado(Persona):
     # sin revalidar topes — se usa solo para reconstruir historial ya
     # validado desde la BD, no para registrar horas nuevas
         self._registros_tiempo.append(registro)
+
+    @property
+    def activo(self) -> bool:
+        return self._activo
+
+    @activo.setter
+    def activo(self, valor: bool) -> None:
+        if not isinstance(valor, bool):
+            raise TypeError("El estado activo debe ser un booleano.")
+        self._activo = valor
+
+    def desactivar(self) -> None:
+        self.activo = False
+
+    def activar(self) -> None:
+        self.activo = True

@@ -13,6 +13,7 @@ CREATE TABLE empleados (
     salario VARCHAR(255) NOT NULL,       
     fecha_inicio_contrato DATE NOT NULL,
     departamento_id INT NULL
+    activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE departamentos (

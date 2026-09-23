@@ -11,7 +11,6 @@ from utils.validaciones import validar_con_patron, validar_password, validar_id
 
 class Usuario:
     _LARGO_MAXIMO_USERNAME = 20
-    _usernames_registrados: set[str] = set()  # temporal — la BD asumirá esto con UNIQUE
 
     def __init__(self, id: int, username: str, password: str, rol: Rol) -> None:
         validar_id(id, "El id")
@@ -19,6 +18,7 @@ class Usuario:
         self.username = username
         self.password = password
         self.rol = rol
+        
 
     # --- id ---
     @property
@@ -63,25 +63,33 @@ class Usuario:
         forma = unicodedata.normalize("NFKD", texto)
         return "".join(c for c in forma if not unicodedata.combining(c))
 
+    # usuario.py — agregar, junto a los demás métodos de instancia
+    def verificar_password(self, password: str) -> bool:
+        return Seguridad.verificar_password(password, self._password)
+
     @classmethod
-    def generar_username(cls, nombre_completo: str) -> str:
+    def generar_base_username(cls, nombre_completo: str) -> str:
         partes = cls._quitar_acentos(nombre_completo).strip().split()
         if len(partes) < 2:
             raise ValueError("Se necesita nombre y apellido para generar el username.")
-
         inicial = partes[0][0].lower()
         apellido = partes[-1].lower()
-        base = f"{inicial}.{apellido}"[: cls._LARGO_MAXIMO_USERNAME]
-
-        candidato = base
-        sufijo = 1
-        while candidato in cls._usernames_registrados:
-            sufijo += 1
-            recorte = cls._LARGO_MAXIMO_USERNAME - len(str(sufijo))
-            candidato = f"{base[:recorte]}{sufijo}"
-
-        cls._usernames_registrados.add(candidato)
-        return candidato
+        return f"{inicial}.{apellido}"[: cls._LARGO_MAXIMO_USERNAME]
 
     def __str__(self) -> str:
         return f"Usuario: {self.username} (ID: {self.id})"
+
+    @classmethod
+    def reconstruir(cls, id: int, username: str, password_hash: str, rol: Rol) -> "Usuario":
+        """
+        Reconstruye un Usuario ya existente a partir de un hash YA calculado
+        (leído desde la BD). A diferencia de __init__, nunca tuvimos la
+        contraseña original — solo su hash — así que no se puede pasar por
+        el setter normal sin volver a hashearlo por error.
+        """
+        usuario = cls.__new__(cls)   # crea la instancia SIN llamar a __init__
+        usuario._id = id
+        usuario.username = username        # sigue pasando por el setter (valida formato)
+        usuario._password = password_hash  # asignación directa — ya es un hash, no re-hashear
+        usuario.rol = rol
+        return usuario

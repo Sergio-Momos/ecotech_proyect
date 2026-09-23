@@ -1,4 +1,4 @@
-from utils.validaciones import validar_texto
+from utils.validaciones import validar_texto, validar_id
 
 
 class Rol:
@@ -31,6 +31,8 @@ class Rol:
             LEER_REGISTROS_TODOS,
             ACTUALIZAR_REGISTROS,
             ELIMINAR_REGISTROS,
+            CREAR_REGISTRO_PROPIO,
+            LEER_REGISTROS_PROPIOS
         }
     )
 
@@ -42,12 +44,24 @@ class Rol:
     )
 
     def __init__(self, nombre: str, permisos=None) -> None:
+        self._id = None
         self.nombre = nombre
         self._permisos = set()
 
         if permisos is not None:
             for permiso in permisos:
                 self.agregar_permiso(permiso)
+
+    @property
+    def id(self) -> int | None:
+        return self._id
+
+    @id.setter
+    def id(self, valor: int) -> None:
+        if self._id is not None:
+            raise AttributeError("El id ya fue asignado y no puede modificarse.")
+        validar_id(valor, "El id")
+        self._id = valor
 
     @property
     def nombre(self) -> str:
