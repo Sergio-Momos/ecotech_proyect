@@ -4,9 +4,11 @@ from utils.validaciones import validar_texto, validar_id
 class Rol:
     """Conjunto de permisos que determina qué acciones puede realizar un usuario.
 
-    Los permisos se representan con cadenas para que el modelo no dependa de
-    la interfaz. Por ejemplo, un rol de RR. HH. puede administrar empleados
-    sin que esa lógica quede ligada al nombre del rol.
+    `perfil_bd` es un dato distinto de los permisos: identifica qué CUENTA
+    TÉCNICA de MySQL debe usarse mientras este rol esté activo (ver
+    database/conexion.py). Rol no sabe ni le importa qué credenciales tiene
+    ese perfil, ni si existe de verdad — solo lo declara. La validación real
+    de que el perfil exista vive en la capa de conexión, no acá.
     """
 
     CREAR_EMPLEADOS = "empleados.crear"
@@ -32,7 +34,7 @@ class Rol:
             ACTUALIZAR_REGISTROS,
             ELIMINAR_REGISTROS,
             CREAR_REGISTRO_PROPIO,
-            LEER_REGISTROS_PROPIOS
+            LEER_REGISTROS_PROPIOS,
         }
     )
 
@@ -43,9 +45,10 @@ class Rol:
         }
     )
 
-    def __init__(self, nombre: str, permisos=None) -> None:
+    def __init__(self, nombre: str, perfil_bd: str, permisos=None) -> None:
         self._id = None
         self.nombre = nombre
+        self.perfil_bd = perfil_bd
         self._permisos = set()
 
         if permisos is not None:
@@ -72,6 +75,14 @@ class Rol:
         self._nombre = validar_texto(valor, "El nombre del rol")
 
     @property
+    def perfil_bd(self) -> str:
+        return self._perfil_bd
+
+    @perfil_bd.setter
+    def perfil_bd(self, valor: str) -> None:
+        self._perfil_bd = validar_texto(valor, "El perfil de base de datos")
+
+    @property
     def permisos(self) -> frozenset[str]:
         """Permisos de solo lectura para evitar modificaciones accidentales."""
         return frozenset(self._permisos)
@@ -90,12 +101,12 @@ class Rol:
     @classmethod
     def recursos_humanos(cls) -> "Rol":
         """Crea el rol con las facultades de administración de empleados."""
-        return cls("Recursos Humanos", cls.PERMISOS_RRHH)
+        return cls("Recursos Humanos", perfil_bd="rrhh", permisos=cls.PERMISOS_RRHH)
 
     @classmethod
     def empleado_estandar(cls) -> "Rol":
         """Crea el rol base: solo puede crear y leer sus propios registros de horas."""
-        return cls("Empleado", cls.PERMISOS_EMPLEADO)
+        return cls("Empleado", perfil_bd="empleado", permisos=cls.PERMISOS_EMPLEADO)
 
     def __str__(self) -> str:
         return self.nombre

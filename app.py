@@ -2,6 +2,7 @@ import customtkinter as ctk
 
 from gui.login_view import LoginView
 from gui.dashboard_view import DashboardView
+from database.conexion import establecer_perfil_activo, limpiar_perfil_activo
 
 
 class App(ctk.CTk):
@@ -30,10 +31,12 @@ class App(ctk.CTk):
 
     def iniciar_sesion_exitosa(self, usuario) -> None:
         self.usuario_actual = usuario
+        establecer_perfil_activo(usuario.rol.perfil_bd)
         self.navegar_a(DashboardView)
 
     def cerrar_sesion(self) -> None:
         self.usuario_actual = None
+        limpiar_perfil_activo()
         self.navegar_a(LoginView)
 
 

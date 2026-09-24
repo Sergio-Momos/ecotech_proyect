@@ -45,12 +45,16 @@ class LoginView(ctk.CTkFrame):
     def _intentar_login(self) -> None:
         username = self.entry_usuario.get()
         password = self.entry_password.get()
-        
 
         usuario = usuario_repo.buscar_por_username(username)
         if usuario is None or not usuario.verificar_password(password):
             messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
             self.entry_password.delete(0, "end")
             return
+
+        try:
+            self.app.iniciar_sesion_exitosa(usuario)
+        except ValueError as e:
+            messagebox.showerror("Error de configuración", str(e))
 
         self.app.iniciar_sesion_exitosa(usuario)

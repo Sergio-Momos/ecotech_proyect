@@ -6,16 +6,15 @@ from models.rol import Rol
 
 def _fila_a_rol(fila: dict) -> Rol:
     permisos = json.loads(fila["permisos"])
-    rol = Rol(nombre=fila["nombre"], permisos=permisos)
+    rol = Rol(nombre=fila["nombre"], perfil_bd=fila["perfil_bd"], permisos=permisos)
     rol.id = fila["id"]
     return rol
-
 
 def crear(rol: Rol) -> int:
     with cursor_db() as (cursor, _):
         cursor.execute(
-            "INSERT INTO roles (nombre, permisos) VALUES (%s, %s)",
-            (rol.nombre, json.dumps(list(rol.permisos))),
+            "INSERT INTO roles (nombre, perfil_bd, permisos) VALUES (%s, %s, %s)",
+            (rol.nombre, rol.perfil_bd, json.dumps(list(rol.permisos))),
         )
         rol.id = cursor.lastrowid
     return rol.id
@@ -41,6 +40,6 @@ def buscar_por_nombre(nombre: str) -> Rol | None:
 def actualizar(rol: Rol) -> None:
     with cursor_db() as (cursor, _):
         cursor.execute(
-            "UPDATE roles SET nombre = %s, permisos = %s WHERE id = %s",
-            (rol.nombre, json.dumps(list(rol.permisos)), rol.id),
+            "UPDATE roles SET nombre = %s, perfil_bd = %s, permisos = %s WHERE id = %s",
+            (rol.nombre, rol.perfil_bd, json.dumps(list(rol.permisos)), rol.id),
         )
