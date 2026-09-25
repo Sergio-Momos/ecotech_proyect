@@ -5,6 +5,7 @@ from models.rol import Rol
 from gui.empleados_view import EmpleadosView
 from gui.departamentos_view import DepartamentosView
 from gui.proyectos_view import ProyectosView
+from gui.registros_view import RegistrosView
 
 class DashboardView(ctk.CTkFrame):
     def __init__(self, parent, app):
@@ -33,8 +34,8 @@ class DashboardView(ctk.CTkFrame):
             (Rol.CREAR_EMPLEADOS, "Gestionar Empleados", lambda: app.navegar_a(EmpleadosView)),
             (Rol.ASIGNAR_EMPLEADOS_DEPARTAMENTO, "Gestionar Departamentos", lambda: app.navegar_a(DepartamentosView)),
             (Rol.ASIGNAR_EMPLEADOS_PROYECTO, "Gestionar Proyectos", lambda: app.navegar_a(ProyectosView)),
-            (Rol.LEER_REGISTROS_TODOS, "Ver todos los registros de horas", self._proximamente),
-            (Rol.LEER_REGISTROS_PROPIOS, "Mis horas trabajadas", self._proximamente),
+            (Rol.LEER_REGISTROS_TODOS, "Ver todos los registros de horas", lambda: app.navegar_a(RegistrosView)),
+            (Rol.LEER_REGISTROS_PROPIOS, "Mis horas trabajadas", lambda: app.navegar_a(RegistrosView)),
         ]
 
         for permiso, texto, comando in opciones:

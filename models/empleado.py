@@ -79,7 +79,20 @@ class Empleado(Persona):
 
 
     def registrar_horas(self, fecha: date, horas_trabajadas: float, descripcion: str, proyecto: "Proyecto") -> RegistroTiempo:
-        horas_del_dia = sum(r.horas_trabajadas for r in self._registros_tiempo if r.fecha == fecha)
+        # No permitir más de un registro por empleado y día
+        if any(
+            registro.fecha == fecha
+            for registro in self._registros_tiempo
+        ):
+            raise ValueError(
+                f"El día {fecha} ya tiene un registro de horas."
+            )
+
+        horas_del_dia = sum(
+            r.horas_trabajadas
+            for r in self._registros_tiempo
+            if r.fecha == fecha
+        )
         if horas_del_dia + horas_trabajadas > 10:
             raise ValueError(
                 f"Con este registro se superarían las 10 horas diarias permitidas "
@@ -114,6 +127,9 @@ class Empleado(Persona):
     # sin revalidar topes — se usa solo para reconstruir historial ya
     # validado desde la BD, no para registrar horas nuevas
         self._registros_tiempo.append(registro)
+
+    def _limpiar_registros_tiempo(self) -> None:
+        self._registros_tiempo.clear()
 
     @property
     def activo(self) -> bool:

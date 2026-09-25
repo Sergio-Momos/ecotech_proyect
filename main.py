@@ -1,6 +1,6 @@
 from datetime import date
 
-from database.conexion import probar_conexion
+from database.conexion import probar_conexion, establecer_perfil_activo
 from models.empleado import Empleado
 from models.rol import Rol
 from repositorios import empleado_repo, rol_repo, usuario_repo, departamento_repo
@@ -15,9 +15,18 @@ def separador(titulo: str) -> None:
 def main():
 
     separador("Conexión a MySQL")
-    if probar_conexion():
-        print("Conexión exitosa.")
+    separador("Probando los tres perfiles de conexión")
+    for perfil in ("auth", "empleado", "rrhh"):
+        try:
+            probar_conexion(perfil)
+            print(f"  {perfil}: conexión exitosa")
+        except Exception as e:
+            print(f"  {perfil}: FALLÓ -> {e}")
 
+    # Este script actúa como administrador para poblar datos iniciales —
+    # no es un usuario autenticado, así que elegir el perfil acá es
+    # explícito y correcto, no una excepción a la regla de seguridad.
+    establecer_perfil_activo("rrhh")
     separador("Sembrando datos base para la GUI (idempotente)")
 
     # --- Rol RRHH: crear solo si no existe ---

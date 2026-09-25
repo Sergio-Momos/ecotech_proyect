@@ -68,13 +68,14 @@ def actualizar(registro: RegistroTiempo) -> None:
 
 
 def cargar_historial(empleado) -> None:
-    """Puebla empleado._registros_tiempo con lo ya persistido. Llamar
-    ANTES de empleado.registrar_horas() sobre un Empleado recién
-    reconstruido desde la BD — si no, los topes diario/semanal se
-    calculan solo contra lo que hay en memoria, no contra la BD real."""
+    """Puebla empleado._registros_tiempo con lo ya persistido."""
+
+    empleado._limpiar_registros_tiempo()
+
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute(
-            "SELECT * FROM registros_tiempo WHERE empleado_id = %s", (empleado.id,)
+            "SELECT * FROM registros_tiempo WHERE empleado_id = %s",
+            (empleado.id,)
         )
         filas = cursor.fetchall()
 
