@@ -46,7 +46,7 @@ class LoginView(ctk.CTkFrame):
         username = self.entry_usuario.get()
         password = self.entry_password.get()
 
-        usuario = usuario_repo.buscar_por_username(username)
+        usuario = usuario_repo.buscar_por_username_activo(username)
         if usuario is None or not usuario.verificar_password(password):
             messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
             self.entry_password.delete(0, "end")

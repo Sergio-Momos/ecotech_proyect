@@ -12,12 +12,13 @@ from utils.validaciones import validar_con_patron, validar_password, validar_id
 class Usuario:
     _LARGO_MAXIMO_USERNAME = 20
 
-    def __init__(self, id: int, username: str, password: str, rol: Rol) -> None:
+    def __init__(self, id: int, username: str, password: str, rol: Rol, activo: bool= True) -> None:
         validar_id(id, "El id")
         self._id = id
         self.username = username
         self.password = password
         self.rol = rol
+        self.activo = activo
         
 
     # --- id ---
@@ -80,7 +81,7 @@ class Usuario:
         return f"Usuario: {self.username} (ID: {self.id})"
 
     @classmethod
-    def reconstruir(cls, id: int, username: str, password_hash: str, rol: Rol) -> "Usuario":
+    def reconstruir(cls, id: int, username: str, password_hash: str, rol: Rol, activo: bool= True) -> "Usuario":
         """
         Reconstruye un Usuario ya existente a partir de un hash YA calculado
         (leído desde la BD). A diferencia de __init__, nunca tuvimos la
@@ -92,4 +93,21 @@ class Usuario:
         usuario.username = username        # sigue pasando por el setter (valida formato)
         usuario._password = password_hash  # asignación directa — ya es un hash, no re-hashear
         usuario.rol = rol
+        usuario._activo = activo
         return usuario
+
+    @property
+    def activo(self) -> bool:
+        return self._activo
+
+    @activo.setter
+    def activo(self, valor: bool) -> None:
+        if not isinstance(valor, bool):
+            raise TypeError("El estado activo debe ser un booleano.")
+        self._activo = valor
+
+    def desactivar(self) -> None:
+        self.activo = False
+
+    def activar(self) -> None:
+        self.activo = True

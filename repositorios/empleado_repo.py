@@ -67,12 +67,26 @@ def buscar_por_id(id_empleado: int) -> Empleado | None:
 def listar_todos(incluir_inactivos: bool = False) -> list[Empleado]:
     with cursor_db(dictionary=True) as (cursor, _):
         if incluir_inactivos:
-            cursor.execute("SELECT * FROM empleados")
+            cursor.execute("""
+                SELECT e.* FROM empleados e
+                WHERE e.id NOT IN (
+                    SELECT u.id FROM usuarios u
+                    JOIN roles r ON u.rol_id = r.id
+                    WHERE r.perfil_bd = 'ti'
+                )
+            """)
         else:
-            cursor.execute("SELECT * FROM empleados WHERE activo = TRUE")
+            cursor.execute("""
+                SELECT e.* FROM empleados e
+                WHERE e.activo = TRUE
+                AND e.id NOT IN (
+                    SELECT u.id FROM usuarios u
+                    JOIN roles r ON u.rol_id = r.id
+                    WHERE u.activo = TRUE AND r.perfil_bd = 'ti'
+                )
+            """)
         filas = cursor.fetchall()
     return [_fila_a_empleado(fila) for fila in filas]
-
 
 def actualizar(empleado: Empleado) -> None:
     rut_hash = Seguridad.hash_busqueda(empleado.rut)

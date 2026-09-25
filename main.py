@@ -14,9 +14,14 @@ def separador(titulo: str) -> None:
 
 def main():
 
+    if rol_repo.buscar_por_nombre("TI") is None:
+        rol_ti = Rol.ti()
+        rol_repo.crear(rol_ti)
+        print(f"Rol TI creado -> id: {rol_ti.id}")
+
     separador("Conexión a MySQL")
     separador("Probando los tres perfiles de conexión")
-    for perfil in ("auth", "empleado", "rrhh"):
+    for perfil in ("auth", "empleado", "rrhh", "ti"):
         try:
             probar_conexion(perfil)
             print(f"  {perfil}: conexión exitosa")

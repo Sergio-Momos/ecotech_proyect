@@ -98,3 +98,8 @@ Este documento registra el estado observado directamente en el repositorio. Una 
 Pendientes a futuro NO OLVIDAR:
 
 asignar_empleado() debería rechazar agregar gente a un proyecto ya desactivado
+
+La lista de asignar gerente a un departamento tiene que ser solo de gerentes
+
+Mejorar la gui
+

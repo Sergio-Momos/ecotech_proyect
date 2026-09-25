@@ -6,8 +6,11 @@ from repositorios import rol_repo
 def _fila_a_usuario(fila: dict) -> Usuario:
     rol = rol_repo.buscar_por_id(fila["rol_id"])
     return Usuario.reconstruir(
-        id=fila["id"], username=fila["username"],
-        password_hash=fila["password_hash"], rol=rol,
+        id=fila["id"],
+        username=fila["username"],
+        password_hash=fila["password_hash"],
+        rol=rol,
+        activo=bool(fila["activo"]),
     )
 
 
@@ -60,3 +63,39 @@ def crear_para_empleado(empleado, password: str, rol) -> Usuario:
     crear(usuario)
     empleado._usuario = usuario
     return usuario
+
+def desactivar(id_usuario: int) -> None:
+    with cursor_db() as (cursor, _):
+        cursor.execute("UPDATE usuarios SET activo = FALSE WHERE id = %s", (id_usuario,))
+
+def cambiar_password(id_usuario: int, nueva_password: str) -> None:
+    """Reseteo por TI (sin verificar la contraseña actual)."""
+    from utils.validaciones import validar_password
+    from utils.constantes import PATRON_PASSWORD, ERROR_PASSWORD
+    from models.seguridad import Seguridad
+    valor_validado = validar_password(nueva_password, PATRON_PASSWORD, ERROR_PASSWORD)
+    nuevo_hash = Seguridad.hashear_password(valor_validado)
+    with cursor_db() as (cursor, _):
+        cursor.execute(
+            "UPDATE usuarios SET password_hash = %s WHERE id = %s",
+            (nuevo_hash, id_usuario),
+        )
+
+def cambiar_password_propio(usuario: Usuario, password_actual: str, nueva_password: str) -> None:
+    """Cambio por el propio usuario (verifica la contraseña actual primero)."""
+    if not usuario.verificar_password(password_actual):
+        raise ValueError("La contraseña actual es incorrecta.")
+    cambiar_password(usuario.id, nueva_password)
+
+def buscar_por_username_activo(username: str) -> Usuario | None:
+    """Solo devuelve el usuario si está activo — para el login."""
+    with cursor_db(dictionary=True) as (cursor, _):
+        cursor.execute(
+            "SELECT * FROM usuarios WHERE username = %s AND activo = TRUE", (username,)
+        )
+        fila = cursor.fetchone()
+    return _fila_a_usuario(fila) if fila else None
+
+def activar(id_usuario: int) -> None:
+    with cursor_db() as (cursor, _):
+        cursor.execute("UPDATE usuarios SET activo = TRUE WHERE id = %s", (id_usuario,))

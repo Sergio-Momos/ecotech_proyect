@@ -6,7 +6,7 @@ from gui.empleados_view import EmpleadosView
 from gui.departamentos_view import DepartamentosView
 from gui.proyectos_view import ProyectosView
 from gui.registros_view import RegistrosView
-
+from gui.ti_view import TiView
 class DashboardView(ctk.CTkFrame):
     def __init__(self, parent, app):
         super().__init__(parent)
@@ -36,6 +36,7 @@ class DashboardView(ctk.CTkFrame):
             (Rol.ASIGNAR_EMPLEADOS_PROYECTO, "Gestionar Proyectos", lambda: app.navegar_a(ProyectosView)),
             (Rol.LEER_REGISTROS_TODOS, "Ver todos los registros de horas", lambda: app.navegar_a(RegistrosView)),
             (Rol.LEER_REGISTROS_PROPIOS, "Mis horas trabajadas", lambda: app.navegar_a(RegistrosView)),
+            (Rol.CREAR_USUARIOS, "Gestión de usuarios", lambda: app.navegar_a(TiView)),
         ]
 
         for permiso, texto, comando in opciones:

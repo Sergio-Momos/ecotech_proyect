@@ -10,7 +10,7 @@ class Rol:
     ese perfil, ni si existe de verdad — solo lo declara. La validación real
     de que el perfil exista vive en la capa de conexión, no acá.
     """
-
+    
     CREAR_EMPLEADOS = "empleados.crear"
     ELIMINAR_EMPLEADOS = "empleados.eliminar"
     ASIGNAR_EMPLEADOS_DEPARTAMENTO = "empleados.asignar_departamento"
@@ -23,6 +23,15 @@ class Rol:
     ELIMINAR_REGISTROS = "registros.eliminar"
 
     CAMPO_PERMISO = "El permiso"
+    CREAR_USUARIOS = "usuarios.crear"
+    RESETEAR_PASSWORD = "usuarios.resetear_password"
+    DESACTIVAR_USUARIOS = "usuarios.desactivar"
+
+    PERMISOS_TI = frozenset({
+        CREAR_USUARIOS,
+        RESETEAR_PASSWORD,
+        DESACTIVAR_USUARIOS,
+    })
 
     PERMISOS_RRHH = frozenset(
         {
@@ -107,6 +116,10 @@ class Rol:
     def empleado_estandar(cls) -> "Rol":
         """Crea el rol base: solo puede crear y leer sus propios registros de horas."""
         return cls("Empleado", perfil_bd="empleado", permisos=cls.PERMISOS_EMPLEADO)
+
+    @classmethod
+    def ti(cls) -> "Rol":
+        return cls("TI", perfil_bd="ti", permisos=cls.PERMISOS_TI)
 
     def __str__(self) -> str:
         return self.nombre
