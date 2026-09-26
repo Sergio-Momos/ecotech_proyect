@@ -1,122 +1,162 @@
-from datetime import date
+"""
+seed.py — Siembra datos base para EcoTech RRHH.
+Corre UNA VEZ por instalación nueva, desde la raíz del proyecto:
 
-from database.conexion import probar_conexion, establecer_perfil_activo
+    python seed.py
+
+Requisitos previos:
+  1. Tener el .env con FERNET_KEY y credenciales de MySQL (pedir al equipo).
+  2. Haber corrido database/esquema.sql en tu MySQL.
+  3. Haber corrido database/roles_mysql.sql en tu MySQL (con cuenta admin).
+"""
+
+from datetime import date
+from database.conexion import establecer_perfil_activo
 from models.empleado import Empleado
 from models.rol import Rol
-from repositorios import empleado_repo, rol_repo, usuario_repo, departamento_repo
 from models.departamento import Departamento
+from models.proyecto import Proyecto
+from repositorios import empleado_repo, rol_repo, usuario_repo, departamento_repo, proyecto_repo
 
-def separador(titulo: str) -> None:
-    print("\n" + "=" * 60)
-    print(titulo)
-    print("=" * 60)
+
+def sembrar_roles() -> dict:
+    print("\n--- Roles ---")
+    roles = {}
+    for factory, clave in [
+        (Rol.recursos_humanos, "rrhh"),
+        (Rol.empleado_estandar, "empleado"),
+        (Rol.ti, "ti"),
+    ]:
+        rol = rol_repo.buscar_por_nombre(factory().nombre)
+        if rol is None:
+            rol = factory()
+            rol_repo.crear(rol)
+            print(f"  Creado: {rol.nombre} (id: {rol.id})")
+        else:
+            # Resincronizar permisos por si cambiaron en el código
+            faltantes = factory().permisos - rol.permisos
+            if faltantes:
+                for p in faltantes:
+                    rol.agregar_permiso(p)
+                rol_repo.actualizar(rol)
+                print(f"  Actualizado: {rol.nombre} (+{len(faltantes)} permisos)")
+            else:
+                print(f"  Ya existía: {rol.nombre} (id: {rol.id})")
+        roles[clave] = rol
+    return roles
+
+
+def sembrar_empleados(roles: dict) -> dict:
+    print("\n--- Empleados base ---")
+    datos = [
+        ("Admin Principal",  "Oficina Central 1",  "900000001", "admin@ecotech.cl",      "21.456.789-K", 900000, date(2024, 1, 1),  "rrhh"),
+        ("Soporte TI",       "Oficina Central 2",  "900000002", "ti@ecotech.cl",          "20.333.444-3", 800000, date(2024, 1, 1),  "ti"),
+        ("Ana Torres",       "Los Alerces 123",    "912345678", "ana.torres@ecotech.cl",  "11.111.111-1", 650000, date(2023, 3, 1),  "empleado"),
+        ("Juan Perez",       "Neptuno 097",        "987654321", "juan.perez@ecotech.cl",  "22.222.222-2", 580000, date(2024, 6, 15), "empleado"),
+        ("Camila Rios",      "Av. Siempre Viva 742","933333333","camila.rios@ecotech.cl", "18.765.432-7", 725450, date(2024, 4, 20), "empleado"),
+    ]
+
+    creados = {}
+    for nombre, dir, tel, correo, rut, salario, fecha, rol_clave in datos:
+        existentes = empleado_repo.listar_todos(incluir_inactivos=True)
+        if any(e.nombre == nombre for e in existentes):
+            emp = next(e for e in existentes if e.nombre == nombre)
+            print(f"  Ya existía: {nombre} (id: {emp.id})")
+        else:
+            emp = Empleado(
+                id=None, nombre=nombre, direccion=dir, telefono=tel,
+                correo=correo, rut=rut, salario=salario,
+                fecha_inicio_contrato=fecha,
+            )
+            empleado_repo.crear(emp)
+            print(f"  Creado: {nombre} (id: {emp.id})")
+        creados[nombre] = (emp, rol_clave)
+    return creados
+
+
+def sembrar_usuarios(empleados_roles: dict, roles: dict) -> None:
+    print("\n--- Usuarios ---")
+    contrasenas = {
+        "rrhh":     "Admin#2024",
+        "ti":       "TI#Clave2024",
+        "empleado": "Empleado#1",
+    }
+    for nombre, (emp, rol_clave) in empleados_roles.items():
+        usuario = usuario_repo.buscar_por_id(emp.id)
+        if usuario is not None:
+            print(f"  Ya existía: {usuario.username}")
+        else:
+            usuario = usuario_repo.crear_para_empleado(
+                emp,
+                password=contrasenas[rol_clave],
+                rol=roles[rol_clave],
+            )
+            print(f"  Creado: {usuario.username}  (contraseña inicial: {contrasenas[rol_clave]})")
+
+
+def sembrar_departamento(empleados_roles: dict) -> None:
+    print("\n--- Departamento base ---")
+    existentes = departamento_repo.listar_todos()
+    if any(d.nombre == "RecursosHumanos" for d in existentes):
+        print("  Ya existía: RecursosHumanos")
+        return
+    ana = empleados_roles.get("Ana Torres")
+    if ana is None:
+        print("  Ana Torres no encontrada, se omite el departamento.")
+        return
+    emp_ana = ana[0]
+    depto = Departamento(id=None, nombre="RecursosHumanos", gerente=emp_ana)
+    departamento_repo.crear(depto)
+    juan = empleados_roles.get("Juan Perez")
+    if juan:
+        departamento_repo.asignar_empleado(depto.id, juan[0].id)
+    print(f"  Creado: RecursosHumanos (id: {depto.id})")
+
+
+def sembrar_proyecto(empleados_roles: dict) -> None:
+    print("\n--- Proyecto base ---")
+    existentes = proyecto_repo.listar_todos(incluir_inactivos=True)
+    if any(p.nombre == "PanelesSolares" for p in existentes):
+        print("  Ya existía: PanelesSolares")
+        return
+    proyecto = Proyecto(
+        id=None, nombre="PanelesSolares",
+        descripcion="Instalacion de paneles solares en oficina central",
+        fecha_inicio=date(2024, 1, 10),
+    )
+    proyecto_repo.crear(proyecto)
+    for nombre in ("Ana Torres", "Camila Rios"):
+        emp_info = empleados_roles.get(nombre)
+        if emp_info:
+            proyecto_repo.asignar_empleado(proyecto.id, emp_info[0].id)
+    print(f"  Creado: PanelesSolares (id: {proyecto.id})")
 
 
 def main():
+    print("=" * 50)
+    print("  EcoTech RRHH — Siembra de datos base")
+    print("=" * 50)
 
-    if rol_repo.buscar_por_nombre("TI") is None:
-        rol_ti = Rol.ti()
-        rol_repo.crear(rol_ti)
-        print(f"Rol TI creado -> id: {rol_ti.id}")
-
-    separador("Conexión a MySQL")
-    separador("Probando los tres perfiles de conexión")
-    for perfil in ("auth", "empleado", "rrhh", "ti"):
-        try:
-            probar_conexion(perfil)
-            print(f"  {perfil}: conexión exitosa")
-        except Exception as e:
-            print(f"  {perfil}: FALLÓ -> {e}")
-
-    # Este script actúa como administrador para poblar datos iniciales —
+    # El script de siembra actúa como administrador explícitamente —
     # no es un usuario autenticado, así que elegir el perfil acá es
-    # explícito y correcto, no una excepción a la regla de seguridad.
+    # correcto (ver notas de arquitectura en database/conexion.py).
     establecer_perfil_activo("rrhh")
-    separador("Sembrando datos base para la GUI (idempotente)")
 
-    # --- Rol RRHH: crear solo si no existe ---
-    rol_rrhh = rol_repo.buscar_por_nombre("Recursos Humanos")
-    if rol_rrhh is None:
-        rol_rrhh = Rol.recursos_humanos()
-        rol_repo.crear(rol_rrhh)
-        print(f"Rol creado -> id: {rol_rrhh.id}")
-    else:
-        print(f"Rol ya existía -> id: {rol_rrhh.id}")
+    roles = sembrar_roles()
+    empleados_roles = sembrar_empleados(roles)
+    sembrar_usuarios(empleados_roles, roles)
+    sembrar_departamento(empleados_roles)
+    sembrar_proyecto(empleados_roles)
 
-    # --- Empleado base: reutiliza el primero que encuentre, o crea uno ---
-    empleados = empleado_repo.listar_todos()
-    if empleados:
-        empleado = empleados[0]
-        print(f"Reutilizando empleado existente -> id: {empleado.id}, {empleado.nombre}")
-    else:
-        empleado = Empleado(
-            id=None, nombre="Admin Principal", direccion="Oficina Central 1",
-            telefono="900000000", correo="admin@ecotech.cl",
-            rut="21.456.789-K", salario=900000, fecha_inicio_contrato=date(2024, 1, 1),
-        )
-        empleado_repo.crear(empleado)
-        print(f"Empleado creado -> id: {empleado.id}")
+    print("\n" + "=" * 50)
+    print("  Siembra completada.")
+    print("\n  Credenciales iniciales:")
+    print("  Admin RRHH  → username generado  / Admin#2024")
+    print("  Soporte TI  → username generado  / TI#Clave2024")
+    print("  Empleados   → username generado  / Empleado#1")
+    print("\n  Los usernames exactos aparecen arriba en 'Usuarios'.")
+    print("=" * 50)
 
-    # --- Usuario para ese empleado: solo si todavía no tiene uno ---
-    usuario = usuario_repo.buscar_por_id(empleado.id)
-    if usuario is None:
-        usuario = usuario_repo.crear_para_empleado(empleado, password="Clave#2024", rol=rol_rrhh)  # NOSONAR
-        print(f"Usuario creado -> username: {usuario.username}")
-    else:
-        print(f"Usuario ya existía -> username: {usuario.username}")
-
-    print("\nListo — puedes iniciar sesión en la GUI con:")
-    print(f"  username: {usuario.username}")
-    print(f"  password: Clave#2024")# NOSONAR
-
-    separador("Sembrando más datos de prueba")
-
-    empleados_existentes = empleado_repo.listar_todos()
-    nombres_existentes = {e.nombre for e in empleados_existentes}
-
-    datos_nuevos = [
-        ("Ana Torres", "Los Alerces 123", "912345678", "ana.torres@ecotech.cl", "11.111.111-1", 650000, date(2023, 3, 1)),
-        ("Juan Perez", "Neptuno 097", "987654321", "juan.perez@ecotech.cl", "22.222.222-2", 580000, date(2024, 6, 15)),
-        ("Camila Rios", "Av. Siempre Viva 742", "933333333", "camila.rios@ecotech.cl", "18.765.432-7", 725450, date(2024, 4, 20)),
-    ]
-
-    for nombre, direccion, telefono, correo, rut, salario, fecha in datos_nuevos:
-        if nombre in nombres_existentes:
-            print(f"{nombre} ya existía, se omite.")
-            continue
-        nuevo = Empleado(
-            id=None, nombre=nombre, direccion=direccion, telefono=telefono,
-            correo=correo, rut=rut, salario=salario, fecha_inicio_contrato=fecha,
-        )
-        empleado_repo.crear(nuevo)
-        print(f"Empleado creado: {nombre} -> id {nuevo.id}")
-
-    # --- Rol Empleado estándar: crear si no existe ---
-    rol_empleado = rol_repo.buscar_por_nombre("Empleado")
-    if rol_empleado is None:
-        rol_empleado = Rol.empleado_estandar()
-        rol_repo.crear(rol_empleado)
-        print(f"Rol 'Empleado' creado -> id: {rol_empleado.id}")
-
-    # --- Departamento de ejemplo, con Ana como gerente ---
-    empleados_por_nombre = {e.nombre: e for e in empleado_repo.listar_todos()}
-    ana = empleados_por_nombre.get("Ana Torres")
-    juan = empleados_por_nombre.get("Juan Perez")
-
-    depto_existente = next((d for d in departamento_repo.listar_todos() if d.nombre == "RecursosHumanos"), None)
-    if depto_existente is None and ana is not None:
-        depto = Departamento(id=None, nombre="RecursosHumanos", gerente=ana)
-        departamento_repo.crear(depto)
-        if juan is not None:
-            departamento_repo.asignar_empleado(depto.id, juan.id)
-        print(f"Departamento creado -> id: {depto.id}")
-
-    # --- Usuario con rol Empleado estándar, para probar esa vista más adelante ---
-    if juan is not None:
-        usuario_juan = usuario_repo.buscar_por_id(juan.id)
-        if usuario_juan is None:
-            usuario_juan = usuario_repo.crear_para_empleado(juan, password="Empleado#1", rol=rol_empleado)  # NOSONAR
-            print(f"Usuario (Empleado estándar) creado -> username: {usuario_juan.username}")
 
 if __name__ == "__main__":
     main()

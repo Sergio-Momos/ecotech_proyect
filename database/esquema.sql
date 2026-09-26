@@ -39,6 +39,7 @@ CREATE TABLE usuarios (
     username VARCHAR(20) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     rol_id INT NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
     FOREIGN KEY (id) REFERENCES empleados(id) ON DELETE CASCADE,
     FOREIGN KEY (rol_id) REFERENCES roles(id)
 );
