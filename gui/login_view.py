@@ -2,7 +2,7 @@ import customtkinter as ctk
 from tkinter import messagebox
 
 from repositorios import usuario_repo
-
+from utils.auditoria import error as log_error
 
 class LoginView(ctk.CTkFrame):
     def __init__(self, parent, app):
@@ -44,14 +44,14 @@ class LoginView(ctk.CTkFrame):
 
     def _intentar_login(self) -> None:
         username = self.entry_usuario.get()
-        password = self.entry_password.get()
-
         usuario = usuario_repo.buscar_por_username_activo(username)
-        if usuario is None or not usuario.verificar_password(password):
+        if usuario is None or not usuario.verificar_password(self.entry_password.get()):
+            log_error(0, "LOGIN", f"intento fallido: {username}")
             messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
             self.entry_password.delete(0, "end")
             return
-
+        self.app.iniciar_sesion_exitosa(usuario)
+        
         try:
             self.app.iniciar_sesion_exitosa(usuario)
         except ValueError as e:

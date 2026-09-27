@@ -4,16 +4,17 @@ from tkinter import messagebox
 from models.departamento import Departamento
 from models.rol import Rol
 from repositorios import departamento_repo, empleado_repo
-
+from utils.auditoria import accion, error as log_error
 
 class DepartamentoFormView(ctk.CTkToplevel):
-    def __init__(self, parent, *, on_guardado, departamento_existente=None):
+    def __init__(self, parent, *,on_guardado, usuario_id,departamento_existente=None):
         super().__init__(parent)
         self.on_guardado = on_guardado
         self.departamento_existente = departamento_existente
         self.title("Editar departamento" if departamento_existente else "Nuevo departamento")
         self.geometry("360x280")
         self.grab_set()
+        self.usuario_id = usuario_id
 
         ctk.CTkLabel(self, text="Nombre").pack(pady=(20, 0))
         self.entrada_nombre = ctk.CTkEntry(self, width=280)
@@ -39,6 +40,7 @@ class DepartamentoFormView(ctk.CTkToplevel):
     def _guardar(self) -> None:
         seleccion = self.selector_gerente.get()
         if seleccion not in self._mapa_empleados:
+            log_error(self.usuario_id,"CREAR_DEPARTAMENTO" ,"GERENTE_INVALIDO")
             messagebox.showerror("Datos inválidos", "Debe seleccionar un gerente válido.")
             return
         gerente = self._mapa_empleados[seleccion]
@@ -47,12 +49,16 @@ class DepartamentoFormView(ctk.CTkToplevel):
             if self.departamento_existente is None:
                 nuevo = Departamento(id=None, nombre=self.entrada_nombre.get(), gerente=gerente)
                 departamento_repo.crear(nuevo)
+                accion(self.usuario_id, "CREAR_DEPARTAMENTO", f"Departamento_id={nuevo.id}")
             else:
                 depto = self.departamento_existente
                 depto.nombre = self.entrada_nombre.get()
                 depto.gerente = gerente
                 departamento_repo.actualizar(depto)
+                accion(self.usuario_id, "ACTUALIZAR_DEPARTAMENTO", f"Departamento_id={depto.id}")
         except (ValueError, TypeError) as e:
+            log_error(self.usuario_id, "CREAR_DEPARTAMENTO" if self.departamento_existente is None 
+                    else "ACTUALIZAR_DEPARTAMENTO", str(e))
             messagebox.showerror("Datos inválidos", str(e))
             return
 
@@ -63,13 +69,14 @@ class DepartamentoFormView(ctk.CTkToplevel):
 class NominaDepartamentoView(ctk.CTkToplevel):
     """Ventana para agregar/quitar empleados de un departamento ya existente."""
 
-    def __init__(self, parent, departamento_id: int, on_cambio):
+    def __init__(self, parent, departamento_id: int, on_cambio, *, usuario_id: int):
         super().__init__(parent)
         self.departamento_id = departamento_id
         self.on_cambio = on_cambio
         self.title("Nómina del departamento")
         self.geometry("420x480")
         self.grab_set()
+        self.usuario_id = usuario_id
 
         self.lista = ctk.CTkScrollableFrame(self, label_text="Empleados asignados")
         self.lista.pack(fill="both", expand=True, padx=15, pady=15)
@@ -110,11 +117,15 @@ class NominaDepartamentoView(ctk.CTkToplevel):
             return
         empleado = self._mapa_candidatos[seleccion]
         departamento_repo.asignar_empleado(self.departamento_id, empleado.id)
+        accion(self.usuario_id, "ASIGNAR_EMPLEADO_DPTO",
+            f"dpto_id={self.departamento_id}, empleado_id={empleado.id}")
         self._recargar()
         self.on_cambio()
 
     def _quitar(self, empleado) -> None:
         departamento_repo.quitar_empleado(empleado.id)
+        accion(self.usuario_id, "QUITAR_EMPLEADO_DPTO",
+            f"dpto_id={self.departamento_id}, empleado_id={empleado.id}")
         self._recargar()
         self.on_cambio()
 
@@ -160,19 +171,25 @@ class DepartamentosView(ctk.CTkFrame):
                               command=lambda d=depto: self._abrir_formulario_editar(d)).pack(side="right", padx=6)
 
     def _abrir_formulario_crear(self) -> None:
-        DepartamentoFormView(self, on_guardado=self._cargar_lista)
+        DepartamentoFormView(self, on_guardado=self._cargar_lista,
+                            usuario_id=self.app.usuario_actual.id)
 
     def _abrir_formulario_editar(self, depto: Departamento) -> None:
-        DepartamentoFormView(self, on_guardado=self._cargar_lista, departamento_existente=depto)
+        DepartamentoFormView(self, on_guardado=self._cargar_lista,
+                            usuario_id=self.app.usuario_actual.id,
+                            departamento_existente=depto)
 
     def _abrir_nomina(self, depto: Departamento) -> None:
-        NominaDepartamentoView(self, departamento_id=depto.id, on_cambio=self._cargar_lista)
+        NominaDepartamentoView(self, departamento_id=depto.id,
+                                usuario_id=self.app.usuario_actual.id,
+                                on_cambio=self._cargar_lista)
 
     def _eliminar(self, depto: Departamento) -> None:
-        if messagebox.askyesno("Confirmar", f"¿Eliminar '{depto.nombre}'? Sus empleados quedarán sin departamento."):
+        if messagebox.askyesno("Confirmar", f"¿Eliminar '{depto.nombre}'?..."):
             departamento_repo.eliminar(depto.id)
+            accion(self.app.usuario_actual.id, "ELIMINAR_DEPARTAMENTO",
+                f"dpto_id={depto.id}")
             self._cargar_lista()
-
 
 def _dashboard():
     from gui.dashboard_view import DashboardView

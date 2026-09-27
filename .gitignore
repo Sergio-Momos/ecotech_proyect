@@ -16,3 +16,4 @@ config.py
 .idea/
 .DS_Store
 subir_cambios.sh
+logs/

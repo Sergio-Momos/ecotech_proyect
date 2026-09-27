@@ -5,18 +5,20 @@ from datetime import datetime
 from models.proyecto import Proyecto
 from models.rol import Rol
 from repositorios import proyecto_repo, empleado_repo
+from utils.auditoria import accion, error as log_error
 
 
 class ProyectoFormView(ctk.CTkToplevel):
     """Formulario modal para crear o editar un Proyecto."""
 
-    def __init__(self, parent, *, on_guardado, proyecto_existente: Proyecto | None = None):
+    def __init__(self, parent, *, on_guardado, usuario_id,proyecto_existente: Proyecto | None = None):
         super().__init__(parent)
         self.on_guardado = on_guardado
         self.proyecto_existente = proyecto_existente
         self.title("Editar proyecto" if proyecto_existente else "Nuevo proyecto")
         self.geometry("380x420")
         self.grab_set()
+        self.usuario_id = usuario_id
 
         ctk.CTkLabel(self, text="Nombre").pack(pady=(20, 0))
         self.entrada_nombre = ctk.CTkEntry(self, width=300)
@@ -48,14 +50,18 @@ class ProyectoFormView(ctk.CTkToplevel):
                     descripcion=self.entrada_descripcion.get(), fecha_inicio=fecha,
                 )
                 proyecto_repo.crear(nuevo)
+                accion(self.usuario_id, "CREAR_PROYECTO", f"Proyecto_id={nuevo.id}")
             else:
                 p = self.proyecto_existente
                 p.nombre = self.entrada_nombre.get()
                 p.descripcion = self.entrada_descripcion.get()
                 p.fecha_inicio = fecha
                 proyecto_repo.actualizar(p)
+                accion(self.usuario_id, "ACTUALIZAR_PROYECTO", f"Proyecto_id={p.id}")
 
         except (ValueError, TypeError) as e:
+            log_error(self.usuario_id, "CREAR_PROYECTO" if self.proyecto_existente is None 
+                    else "ACTUALIZAR_PROYECTO", str(e))
             messagebox.showerror("Datos inválidos", str(e))
             return
 
@@ -66,13 +72,14 @@ class ProyectoFormView(ctk.CTkToplevel):
 class NominaProyectoView(ctk.CTkToplevel):
     """Ventana para agregar/quitar empleados de un proyecto (relación N:M)."""
 
-    def __init__(self, parent, *, proyecto_id: int, on_cambio):
+    def __init__(self, parent, *, proyecto_id: int, on_cambio, usuario_id: int):
         super().__init__(parent)
         self.proyecto_id = proyecto_id
         self.on_cambio = on_cambio
         self.title("Participantes del proyecto")
         self.geometry("420x480")
         self.grab_set()
+        self.usuario_id = usuario_id
 
         self.lista = ctk.CTkScrollableFrame(self, label_text="Empleados asignados")
         self.lista.pack(fill="both", expand=True, padx=15, pady=15)
@@ -114,7 +121,10 @@ class NominaProyectoView(ctk.CTkToplevel):
         empleado = self._mapa_candidatos[seleccion]
         try:
             proyecto_repo.asignar_empleado(self.proyecto_id, empleado.id)
+            accion(self.usuario_id, "ASIGNAR_EMPLEADO_PROYECTO",
+                        f"pryt_id={self.proyecto_id}, empleado_id={empleado.id}")
         except ValueError as e:
+            log_error(self.usuario_id, "ASIGNAR_EMPLEADO_PROYECTO", str(e))
             messagebox.showerror("Error", str(e))
             return
         self._recargar()
@@ -122,6 +132,8 @@ class NominaProyectoView(ctk.CTkToplevel):
 
     def _quitar(self, empleado) -> None:
         proyecto_repo.quitar_empleado(self.proyecto_id, empleado.id)
+        accion(self.usuario_id, "QUITAR_EMPLEADO_PROYECTO",
+                    f"pryt_id={self.proyecto_id}, empleado_id={empleado.id}")
         self._recargar()
         self.on_cambio()
 
@@ -186,21 +198,29 @@ class ProyectosView(ctk.CTkFrame):
                               command=lambda p=proyecto: self._reactivar(p)).pack(side="right", padx=6)
 
     def _abrir_formulario_crear(self) -> None:
-        ProyectoFormView(self, on_guardado=self._cargar_lista)
+        ProyectoFormView(self, on_guardado=self._cargar_lista,
+                        usuario_id=self.app.usuario_actual.id)
 
     def _abrir_formulario_editar(self, proyecto: Proyecto) -> None:
-        ProyectoFormView(self, on_guardado=self._cargar_lista, proyecto_existente=proyecto)
+        ProyectoFormView(self, on_guardado=self._cargar_lista, proyecto_existente=proyecto,
+                        usuario_id=self.app.usuario_actual.id)
 
     def _abrir_nomina(self, proyecto: Proyecto) -> None:
-        NominaProyectoView(self, proyecto_id=proyecto.id, on_cambio=self._cargar_lista)
+        NominaProyectoView(self, proyecto_id=proyecto.id, 
+                        on_cambio=self._cargar_lista,
+                        usuario_id=self.app.usuario_actual.id)
 
     def _desactivar(self, proyecto: Proyecto) -> None:
         if messagebox.askyesno("Confirmar", f"¿Desactivar '{proyecto.nombre}'?"):
             proyecto_repo.eliminar(proyecto.id)
+            accion(self.app.usuario_actual.id, "DESACTIVAR_PROYECTO",
+                            f"pryt_id={proyecto.id}")
             self._cargar_lista()
 
     def _reactivar(self, proyecto: Proyecto) -> None:
         proyecto_repo.activar(proyecto.id)
+        accion(self.app.usuario_actual.id, "ACTIVAR_PROYECTO",
+                                    f"pryt_id={proyecto.id}")
         self._cargar_lista()
 
 

@@ -85,21 +85,11 @@ Este documento registra el estado observado directamente en el repositorio. Una 
 
 1. Implementar `Usuario` y `Seguridad` para dejar listo el acceso seguro.
 2. Implementar `Departamento`, `Proyecto` y `RegistroTiempo`, incluyendo sus relaciones.
-3. Crear el esquema SQLite y una prueba de conexión.
+3. Crear el esquema mySQL y una prueba de conexión.
 4. Implementar y probar un repositorio inicial, comenzando por empleados.
 5. Conectar progresivamente las vistas Tkinter.
 
 ## Decisiones pendientes del diseño
 
-- [ ] Confirmar si la autenticación será parte de `Usuario` o una clase separada.
 - [ ] Definir las firmas finales de `verificar_password`, `cifrar_datos` y `descifrar_datos`.
 - [ ] Mantener una única representación de cada relación: atributo de clase o relación gestionada por repositorio, evitando duplicación.
-
-Pendientes a futuro NO OLVIDAR:
-
-asignar_empleado() debería rechazar agregar gente a un proyecto ya desactivado
-
-La lista de asignar gerente a un departamento tiene que ser solo de gerentes
-
-Mejorar la gui
-

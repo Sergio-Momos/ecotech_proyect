@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 
 from models.rol import Rol
 from repositorios import empleado_repo, proyecto_repo, registro_tiempo_repo
-
+from utils.auditoria import registro_horas, error as log_error
 
 class RegistroFormView(ctk.CTkToplevel):
     """Editar un RegistroTiempo existente (uso de RRHH)."""
@@ -241,6 +241,15 @@ class CargaMasivaView(ctk.CTkToplevel):
         # Paso 3: todo pasó -> recién ahí se persiste
         for registro in pendientes:
             registro_tiempo_repo.crear(registro)
+            from utils.auditoria import registro_horas, error as log_error
+
+            registro_horas(
+                self.app.usuario_actual.id,
+                self.empleado.id,
+                proyecto.id,
+                str(registro.fecha),
+                registro.horas_trabajadas,
+            )
 
         messagebox.showinfo("Listo", f"Se guardaron {len(pendientes)} registros.")
         self.on_guardado()
@@ -257,7 +266,7 @@ class RegistrosView(ctk.CTkFrame):
         encabezado = ctk.CTkFrame(self, fg_color="transparent")
         encabezado.pack(fill="x", padx=20, pady=15)
         ctk.CTkButton(encabezado, text="← Volver", width=90,
-                      command=lambda: app.navegar_a(_dashboard())).pack(side="left")
+                    command=lambda: app.navegar_a(_dashboard())).pack(side="left")
         ctk.CTkLabel(encabezado, text="Registro de horas", font=ctk.CTkFont(size=18, weight="bold")).pack(side="left", padx=20)
 
         self.tabs = ctk.CTkTabview(self)
