@@ -4,15 +4,17 @@ from datetime import timedelta, datetime
 
 from models.rol import Rol
 from repositorios import empleado_repo, proyecto_repo, registro_tiempo_repo
-from utils.auditoria import registro_horas, error as log_error
+from utils.auditoria import accion, registro_horas, error as log_error
+
 
 class RegistroFormView(ctk.CTkToplevel):
     """Editar un RegistroTiempo existente (uso de RRHH)."""
 
-    def __init__(self, parent, *, on_guardado, registro):
+    def __init__(self, parent, *, on_guardado, registro, usuario_id: int):
         super().__init__(parent)
         self.on_guardado = on_guardado
         self.registro = registro
+        self.usuario_id = usuario_id
         self.title("Editar registro de horas")
         self.geometry("360x460")
         self.grab_set()
@@ -37,7 +39,9 @@ class RegistroFormView(ctk.CTkToplevel):
         ctk.CTkLabel(self, text="Proyecto").pack(pady=(15, 0))
         proyectos = proyecto_repo.listar_todos()
         self._mapa_proyectos = {p.nombre: p for p in proyectos}
-        self.selector_proyecto = ctk.CTkOptionMenu(self, values=list(self._mapa_proyectos.keys()), width=280)
+        self.selector_proyecto = ctk.CTkOptionMenu(
+            self, values=list(self._mapa_proyectos.keys()), width=280
+        )
         self.selector_proyecto.set(registro.proyecto.nombre)
         self.selector_proyecto.pack()
 
@@ -50,10 +54,12 @@ class RegistroFormView(ctk.CTkToplevel):
             self.registro.descripcion = self.entrada_descripcion.get()
             self.registro.proyecto = self._mapa_proyectos[self.selector_proyecto.get()]
             registro_tiempo_repo.actualizar(self.registro)
+            accion(self.usuario_id, "ACTUALIZAR_REGISTRO",
+                   f"registro_id={self.registro.id}, empleado_id={self.registro.empleado.id}")
         except (ValueError, TypeError, KeyError) as e:
+            log_error(self.usuario_id, "ACTUALIZAR_REGISTRO", str(e))
             messagebox.showerror("Datos inválidos", str(e))
             return
-
         self.on_guardado()
         self.destroy()
 
@@ -63,10 +69,11 @@ class CargaMasivaView(ctk.CTkToplevel):
     todas juntas — resuelve el caso de cargar muchas horas atrasadas
     sin perder la validación diaria/semanal por el camino."""
 
-    def __init__(self, parent, *, empleado, on_guardado):
+    def __init__(self, parent, *, empleado, on_guardado, usuario_id: int):
         super().__init__(parent)
         self.empleado = empleado
         self.on_guardado = on_guardado
+        self.usuario_id = usuario_id
         self.title("Carga masiva de horas")
         self.geometry("580x620")
         self.grab_set()
@@ -77,7 +84,8 @@ class CargaMasivaView(ctk.CTkToplevel):
         controles = ctk.CTkFrame(self, fg_color="transparent")
         controles.pack(fill="x", padx=15, pady=15)
 
-        ctk.CTkLabel(controles, text="Proyecto").grid(row=0, column=0, columnspan=4, sticky="w", pady=(0, 5))
+        ctk.CTkLabel(controles, text="Proyecto").grid(
+            row=0, column=0, columnspan=4, sticky="w", pady=(0, 5))
         self.selector_proyecto = ctk.CTkOptionMenu(
             controles, values=list(self._mapa_proyectos.keys()) or ["(sin proyectos)"]
         )
@@ -93,7 +101,9 @@ class CargaMasivaView(ctk.CTkToplevel):
 
         ctk.CTkButton(self, text="Generar tabla", command=self._generar_filas).pack(pady=(0, 10))
 
-        self.contenedor_filas = ctk.CTkScrollableFrame(self, label_text="Horas por día (deja en 0 los días no trabajados)")
+        self.contenedor_filas = ctk.CTkScrollableFrame(
+            self, label_text="Horas por día (deja en 0 los días no trabajados)"
+        )
         self.contenedor_filas.pack(fill="both", expand=True, padx=15, pady=(0, 10))
         self._filas = []
 
@@ -101,96 +111,44 @@ class CargaMasivaView(ctk.CTkToplevel):
 
     def _generar_filas(self) -> None:
         try:
-            desde = datetime.strptime(
-                self.entrada_desde.get(),
-                "%Y-%m-%d"
-            ).date()
-
-            hasta = datetime.strptime(
-                self.entrada_hasta.get(),
-                "%Y-%m-%d"
-            ).date()
-
+            desde = datetime.strptime(self.entrada_desde.get(), "%Y-%m-%d").date()
+            hasta = datetime.strptime(self.entrada_hasta.get(), "%Y-%m-%d").date()
         except ValueError:
-            messagebox.showerror(
-                "Datos inválidos",
-                "Las fechas deben tener formato AAAA-MM-DD."
-            )
+            messagebox.showerror("Datos inválidos", "Las fechas deben tener formato AAAA-MM-DD.")
             return
 
         if hasta < desde:
-            messagebox.showerror(
-                "Datos inválidos",
-                "'Hasta' no puede ser anterior a 'Desde'."
-            )
+            messagebox.showerror("Datos inválidos", "'Hasta' no puede ser anterior a 'Desde'.")
             return
-
         if (hasta - desde).days > 62:
-            messagebox.showerror(
-                "Rango muy amplio",
-                "Genera como máximo ~2 meses a la vez."
-            )
+            messagebox.showerror("Rango muy amplio", "Genera como máximo ~2 meses a la vez.")
             return
 
-        # Limpiar las filas anteriores
         for widget in self.contenedor_filas.winfo_children():
             widget.destroy()
-
         self._filas = []
 
-        # Obtener los registros que ya existen para este empleado
-        registros_existentes = registro_tiempo_repo.listar_por_empleado(
-            self.empleado.id
-        )
-
-        # Guardar solamente las fechas que ya tienen registro
         fechas_registradas = {
-            registro.fecha
-            for registro in registros_existentes
+            r.fecha for r in registro_tiempo_repo.listar_por_empleado(self.empleado.id)
         }
 
         dia = desde
-
         while dia <= hasta:
             fila = ctk.CTkFrame(self.contenedor_filas)
             fila.pack(fill="x", pady=2)
-
-            ctk.CTkLabel(
-                fila,
-                text=dia.isoformat(),
-                width=100
-            ).pack(side="left", padx=5)
-
-            entry_horas = ctk.CTkEntry(
-                fila,
-                width=60,
-                placeholder_text="0"
-            )
+            ctk.CTkLabel(fila, text=dia.isoformat(), width=100).pack(side="left", padx=5)
+            entry_horas = ctk.CTkEntry(fila, width=60, placeholder_text="0")
             entry_horas.pack(side="left", padx=5)
+            entry_descripcion = ctk.CTkEntry(fila, placeholder_text="Descripción")
+            entry_descripcion.pack(side="left", padx=5, fill="x", expand=True)
 
-            entry_descripcion = ctk.CTkEntry(
-                fila,
-                placeholder_text="Descripción"
-            )
-            entry_descripcion.pack(
-                side="left",
-                padx=5,
-                fill="x",
-                expand=True
-            )
-
-            # Comprobar si el día ya tiene un registro
             bloqueado = dia in fechas_registradas
-
             if bloqueado:
                 entry_horas.configure(state="disabled")
                 entry_descripcion.configure(state="disabled")
-
                 ctk.CTkLabel(fila, text="Ya registrado").pack(side="right", padx=5)
 
-            # Guardamos también si la fila está bloqueada
             self._filas.append((dia, entry_horas, entry_descripcion, bloqueado))
-
             dia += timedelta(days=1)
 
     def _guardar_lote(self) -> None:
@@ -203,24 +161,12 @@ class CargaMasivaView(ctk.CTkToplevel):
             messagebox.showerror("Nada que guardar", "Genera la tabla primero.")
             return
 
-        # Paso 1: cargar el historial real ANTES de validar — si no,
-        # los topes se calcularían solo contra lo que hay en memoria.
         registro_tiempo_repo.cargar_historial(self.empleado)
 
-        # Paso 2: validar el LOTE COMPLETO en memoria, sin guardar nada
-        # todavía. Si una sola fila falla, no queda nada a medias.
         pendientes = []
         for dia, entry_horas, entry_descripcion, bloqueado in self._filas:
-
             if bloqueado:
                 continue
-
-            texto_horas = entry_horas.get().strip()
-
-            if not texto_horas or texto_horas == "0":
-                continue
-
-            # resto del código...
             texto_horas = entry_horas.get().strip()
             if not texto_horas or texto_horas == "0":
                 continue
@@ -238,18 +184,10 @@ class CargaMasivaView(ctk.CTkToplevel):
             messagebox.showinfo("Nada que guardar", "No ingresaste horas en ninguna fila.")
             return
 
-        # Paso 3: todo pasó -> recién ahí se persiste
         for registro in pendientes:
             registro_tiempo_repo.crear(registro)
-            from utils.auditoria import registro_horas, error as log_error
-
-            registro_horas(
-                self.app.usuario_actual.id,
-                self.empleado.id,
-                proyecto.id,
-                str(registro.fecha),
-                registro.horas_trabajadas,
-            )
+            registro_horas(self.usuario_id, self.empleado.id, proyecto.id,
+                           str(registro.fecha), registro.horas_trabajadas)
 
         messagebox.showinfo("Listo", f"Se guardaron {len(pendientes)} registros.")
         self.on_guardado()
@@ -266,8 +204,9 @@ class RegistrosView(ctk.CTkFrame):
         encabezado = ctk.CTkFrame(self, fg_color="transparent")
         encabezado.pack(fill="x", padx=20, pady=15)
         ctk.CTkButton(encabezado, text="← Volver", width=90,
-                    command=lambda: app.navegar_a(_dashboard())).pack(side="left")
-        ctk.CTkLabel(encabezado, text="Registro de horas", font=ctk.CTkFont(size=18, weight="bold")).pack(side="left", padx=20)
+                      command=lambda: app.navegar_a(_dashboard())).pack(side="left")
+        ctk.CTkLabel(encabezado, text="Registro de horas",
+                     font=ctk.CTkFont(size=18, weight="bold")).pack(side="left", padx=20)
 
         self.tabs = ctk.CTkTabview(self)
         self.tabs.pack(fill="both", expand=True, padx=20, pady=(0, 20))
@@ -280,12 +219,10 @@ class RegistrosView(ctk.CTkFrame):
             self.tabs.add("Todos los registros")
             self._construir_todos(self.tabs.tab("Todos los registros"))
 
-    # --- Pestaña: Mis horas ---
     def _construir_mis_horas(self, contenedor) -> None:
         if self.rol.tiene_permiso(Rol.CREAR_REGISTRO_PROPIO):
             ctk.CTkButton(contenedor, text="Cargar horas (rango de fechas)",
                           command=self._abrir_carga_masiva).pack(anchor="w", pady=(10, 5))
-
         self.lista_mias = ctk.CTkScrollableFrame(contenedor)
         self.lista_mias.pack(fill="both", expand=True, pady=(5, 10))
         self._cargar_mis_registros()
@@ -293,17 +230,19 @@ class RegistrosView(ctk.CTkFrame):
     def _cargar_mis_registros(self) -> None:
         for widget in self.lista_mias.winfo_children():
             widget.destroy()
-        registros = registro_tiempo_repo.listar_por_empleado(self.empleado_actual.id)
-        for r in sorted(registros, key=lambda x: x.fecha, reverse=True):
+        for r in sorted(registro_tiempo_repo.listar_por_empleado(self.empleado_actual.id),
+                        key=lambda x: x.fecha, reverse=True):
             fila = ctk.CTkFrame(self.lista_mias)
             fila.pack(fill="x", pady=2)
-            texto = f"{r.fecha}  ·  {r.horas_trabajadas}h  ·  {r.proyecto.nombre}  ·  {r.descripcion}"
-            ctk.CTkLabel(fila, text=texto).pack(side="left", padx=10, pady=6)
+            ctk.CTkLabel(fila, text=f"{r.fecha}  ·  {r.horas_trabajadas}h  ·  "
+                                    f"{r.proyecto.nombre}  ·  {r.descripcion}").pack(
+                side="left", padx=10, pady=6)
 
     def _abrir_carga_masiva(self) -> None:
-        CargaMasivaView(self, empleado=self.empleado_actual, on_guardado=self._cargar_mis_registros)
+        CargaMasivaView(self, empleado=self.empleado_actual,
+                        on_guardado=self._cargar_mis_registros,
+                        usuario_id=self.app.usuario_actual.id)
 
-    # --- Pestaña: Todos los registros (RRHH) ---
     def _construir_todos(self, contenedor) -> None:
         self.lista_todos = ctk.CTkScrollableFrame(contenedor)
         self.lista_todos.pack(fill="both", expand=True, pady=10)
@@ -312,13 +251,13 @@ class RegistrosView(ctk.CTkFrame):
     def _cargar_todos(self) -> None:
         for widget in self.lista_todos.winfo_children():
             widget.destroy()
-        registros = registro_tiempo_repo.listar_todos()
-        for r in sorted(registros, key=lambda x: x.fecha, reverse=True):
+        for r in sorted(registro_tiempo_repo.listar_todos(),
+                        key=lambda x: x.fecha, reverse=True):
             fila = ctk.CTkFrame(self.lista_todos)
             fila.pack(fill="x", pady=2)
-            texto = f"{r.fecha}  ·  {r.empleado.nombre}  ·  {r.horas_trabajadas}h  ·  {r.proyecto.nombre}"
-            ctk.CTkLabel(fila, text=texto).pack(side="left", padx=10, pady=6)
-
+            ctk.CTkLabel(fila, text=f"{r.fecha}  ·  {r.empleado.nombre}  ·  "
+                                    f"{r.horas_trabajadas}h  ·  {r.proyecto.nombre}").pack(
+                side="left", padx=10, pady=6)
             if self.rol.tiene_permiso(Rol.ELIMINAR_REGISTROS):
                 ctk.CTkButton(fila, text="Eliminar", width=80, fg_color="#B3261E",
                               command=lambda reg=r: self._eliminar(reg)).pack(side="right", padx=6)
@@ -327,11 +266,14 @@ class RegistrosView(ctk.CTkFrame):
                               command=lambda reg=r: self._editar(reg)).pack(side="right", padx=6)
 
     def _editar(self, registro) -> None:
-        RegistroFormView(self, on_guardado=self._cargar_todos, registro=registro)
+        RegistroFormView(self, on_guardado=self._cargar_todos,
+                         registro=registro, usuario_id=self.app.usuario_actual.id)
 
     def _eliminar(self, registro) -> None:
         if messagebox.askyesno("Confirmar", f"¿Eliminar el registro del {registro.fecha}?"):
             registro_tiempo_repo.eliminar(registro.id)
+            accion(self.app.usuario_actual.id, "ELIMINAR_REGISTRO",
+                   f"registro_id={registro.id}, empleado_id={registro.empleado.id}")
             self._cargar_todos()
 
 
