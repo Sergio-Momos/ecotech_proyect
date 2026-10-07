@@ -23,22 +23,17 @@ class App(ctk.CTk):
         self.navegar_a(LoginView)
 
     def navegar_a(self, clase_frame) -> None:
-        nuevo = clase_frame(self._contenedor, self)
         if self._frame_actual is not None:
             self._frame_actual.destroy()
+        nuevo = clase_frame(self._contenedor, self)
         nuevo.pack(fill="both", expand=True)
         self._frame_actual = nuevo
 
     def iniciar_sesion_exitosa(self, usuario) -> None:
-        establecer_perfil_activo(usuario.rol.perfil_bd)
         self.usuario_actual = usuario
-        try:
-            self.navegar_a(DashboardView)
-        except Exception:
-            self.usuario_actual = None
-            limpiar_perfil_activo()
-            raise
+        establecer_perfil_activo(usuario.rol.perfil_bd)
         accion(usuario.id, "LOGIN_EXITOSO")
+        self.navegar_a(DashboardView)
 
     def cerrar_sesion(self) -> None:
         if self.usuario_actual:

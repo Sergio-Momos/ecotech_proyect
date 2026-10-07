@@ -1,6 +1,4 @@
 from datetime import date
-from decimal import Decimal
-from math import isfinite
 from typing import TYPE_CHECKING
 from utils.validaciones import validar_texto
 
@@ -56,14 +54,10 @@ class RegistroTiempo:
     def horas_trabajadas(self, valor: float) -> None:
         if not isinstance(valor, (int, float)) or isinstance(valor, bool):
             raise TypeError("Las horas trabajadas deben ser un número (int o float)")
-        if not isfinite(valor):
-            raise ValueError("Las horas trabajadas deben ser un número finito.")
         if valor <= 0:
             raise ValueError("Las horas trabajadas deben ser mayores que 0")
         if valor > 10:
-            raise ValueError("Un solo registro no puede superar las 10 horas diarias permitidas.")
-        if Decimal(str(valor)) != Decimal(str(valor)).quantize(Decimal("0.01")):
-            raise ValueError("Las horas trabajadas admiten como máximo dos decimales.")
+            raise ValueError("Un solo registro no puede superar las 10 horas diarias permitidas por ley")
         self._horas_trabajadas = float(valor)
 
     @property

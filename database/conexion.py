@@ -53,17 +53,9 @@ def probar_conexion(perfil: str | None = None) -> bool:
 @contextmanager
 def cursor_db(dictionary: bool = False):
     conexion = obtener_conexion()
-    cursor = None
+    cursor = conexion.cursor(dictionary=dictionary)
     try:
-        cursor = conexion.cursor(dictionary=dictionary)
         yield cursor, conexion
         conexion.commit()
-    except Exception:
-        conexion.rollback()
-        raise
     finally:
-        try:
-            if cursor is not None:
-                cursor.close()
-        finally:
-            conexion.close()
+        conexion.close()

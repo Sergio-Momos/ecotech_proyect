@@ -1,6 +1,5 @@
 import customtkinter as ctk
 from tkinter import messagebox
-from mysql.connector import Error as DatabaseError
 
 from repositorios import usuario_repo
 from utils.auditoria import error as log_error
@@ -44,15 +43,18 @@ class LoginView(ctk.CTkFrame):
         self.btn_ingresar.pack(pady=(20, 30), padx=20)
 
     def _intentar_login(self) -> None:
-        username = self.entry_usuario.get().strip()
+        username = self.entry_usuario.get()
+        usuario = usuario_repo.buscar_por_username_activo(username)
+        if usuario is None or not usuario.verificar_password(self.entry_password.get()):
+            log_error(0, "LOGIN", f"intento fallido: {username}")
+            messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
+            self.entry_password.delete(0, "end")
+            return
+        self.app.iniciar_sesion_exitosa(usuario)
+        
         try:
-            usuario = usuario_repo.buscar_por_username_activo(username)
-            if usuario is None or not usuario.verificar_password(self.entry_password.get()):
-                log_error(0, "LOGIN", f"intento fallido: {username}")
-                messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
-                self.entry_password.delete(0, "end")
-                return
             self.app.iniciar_sesion_exitosa(usuario)
-        except (ValueError, ConnectionError, DatabaseError) as e:
-            log_error(0, "LOGIN", str(e))
-            messagebox.showerror("No se pudo iniciar sesión", str(e))
+        except ValueError as e:
+            messagebox.showerror("Error de configuración", str(e))
+
+        self.app.iniciar_sesion_exitosa(usuario)
