@@ -4,6 +4,7 @@ from .persona import Persona
 from .registro_tiempo import RegistroTiempo
 
 from .usuario import Usuario
+from utils.validaciones import validar_historial_horas
 
 if TYPE_CHECKING:
     from .proyecto import Proyecto
@@ -79,43 +80,19 @@ class Empleado(Persona):
 
 
     def registrar_horas(self, fecha: date, horas_trabajadas: float, descripcion: str, proyecto: "Proyecto") -> RegistroTiempo:
-        # No permitir más de un registro por empleado y día
-        if any(
-            registro.fecha == fecha
-            for registro in self._registros_tiempo
-        ):
-            raise ValueError(
-                f"El día {fecha} ya tiene un registro de horas."
-            )
-
-        horas_del_dia = sum(
-            r.horas_trabajadas
-            for r in self._registros_tiempo
-            if r.fecha == fecha
-        )
-        if horas_del_dia + horas_trabajadas > 10:
-            raise ValueError(
-                f"Con este registro se superarían las 10 horas diarias permitidas "
-                f"({horas_del_dia}h ya registradas el {fecha})."
-            )
-
-        semana_nueva = fecha.isocalendar()[:2]  # (año ISO, número de semana) → lunes a domingo
-        horas_de_la_semana = sum(
-            r.horas_trabajadas for r in self._registros_tiempo
-            if r.fecha.isocalendar()[:2] == semana_nueva
-        )
-        if horas_de_la_semana + horas_trabajadas > 42:
-            raise ValueError(
-                f"Con este registro se superarían las 42 horas semanales permitidas "
-                f"({horas_de_la_semana}h ya registradas esa semana)."
-            )
-
         registro = RegistroTiempo(fecha, horas_trabajadas, descripcion, self, proyecto)
+        validar_historial_horas(
+            registro.fecha, registro.horas_trabajadas,
+            ((r.fecha, r.horas_trabajadas) for r in self._registros_tiempo),
+        )
         self._registros_tiempo.append(registro)
         return registro
 
     def crear_usuario(self, password: str, rol: "Rol") -> "Usuario":
-        username = Usuario.generar_username(self.nombre)
+        """Crea la cuenta en memoria; la unicidad en BD la resuelve usuario_repo."""
+        if self._usuario is not None:
+            raise ValueError("El empleado ya tiene un usuario.")
+        username = Usuario.generar_base_username(self.nombre)
         self._usuario = Usuario(id=self.id, username=username, password=password, rol=rol)
         return self._usuario
 

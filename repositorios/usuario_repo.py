@@ -57,7 +57,7 @@ def crear_para_empleado(empleado, password: str, rol) -> Usuario:
     """Punto de entrada real para crear un Usuario persistido: genera un
     username garantizado único contra la BD (no contra memoria), y guarda
     de una vez. Esta es la función que debería usar la GUI — no
-    Empleado.crear_usuario(), que solo resuelve colisiones en memoria."""
+    Empleado.crear_usuario(), que crea la cuenta únicamente en memoria."""
     username = generar_username_unico(empleado.nombre)
     usuario = Usuario(id=empleado.id, username=username, password=password, rol=rol)
     crear(usuario)
@@ -88,10 +88,13 @@ def cambiar_password_propio(usuario: Usuario, password_actual: str, nueva_passwo
     cambiar_password(usuario.id, nueva_password)
 
 def buscar_por_username_activo(username: str) -> Usuario | None:
-    """Solo devuelve el usuario si está activo — para el login."""
+    """El acceso exige que tanto la cuenta como el empleado estén activos."""
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute(
-            "SELECT * FROM usuarios WHERE username = %s AND activo = TRUE", (username,)
+            """SELECT u.* FROM usuarios u
+               JOIN empleados e ON e.id = u.id
+               WHERE u.username = %s AND u.activo = TRUE AND e.activo = TRUE""",
+            (username,),
         )
         fila = cursor.fetchone()
     return _fila_a_usuario(fila) if fila else None

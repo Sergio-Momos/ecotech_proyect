@@ -1,4 +1,5 @@
 import re
+from decimal import Decimal
 
 from .constantes import PATRON_RUT
 
@@ -65,3 +66,15 @@ def validar_id(valor: int, campo: str = "El id") -> None:
         raise TypeError(f"{campo} debe ser un número entero.")
     if valor <= 0:
         raise ValueError(f"{campo} debe ser mayor que cero.")
+
+
+def validar_historial_horas(fecha, horas, historial) -> None:
+    """Reglas actuales del proyecto: un registro diario y hasta 42h por semana."""
+    total = Decimal(str(horas))
+    for fecha_previa, horas_previas in historial:
+        if fecha_previa == fecha:
+            raise ValueError(f"El día {fecha} ya tiene un registro de horas.")
+        if fecha_previa.isocalendar()[:2] == fecha.isocalendar()[:2]:
+            total += Decimal(str(horas_previas))
+    if total > 42:
+        raise ValueError("Con este registro se superarían las 42 horas semanales permitidas.")

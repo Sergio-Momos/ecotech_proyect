@@ -20,6 +20,7 @@ class Rol:
     LEER_REGISTROS_PROPIOS = "registros.leer_propios"
     LEER_REGISTROS_TODOS = "registros.leer_todos"
     ACTUALIZAR_REGISTROS = "registros.actualizar"
+    ACTUALIZAR_REGISTRO_PROPIO = "registros.actualizar_propio"
     ELIMINAR_REGISTROS = "registros.eliminar"
 
     CAMPO_PERMISO = "El permiso"
@@ -31,6 +32,9 @@ class Rol:
         CREAR_USUARIOS,
         RESETEAR_PASSWORD,
         DESACTIVAR_USUARIOS,
+        CREAR_REGISTRO_PROPIO,
+        LEER_REGISTROS_PROPIOS,
+        ACTUALIZAR_REGISTRO_PROPIO,
     })
 
     PERMISOS_RRHH = frozenset(
