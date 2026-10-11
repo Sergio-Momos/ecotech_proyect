@@ -7,17 +7,17 @@ from models.rol import Rol
 def _fila_a_rol(fila: dict) -> Rol:
     permisos = json.loads(fila["permisos"])
     rol = Rol(nombre=fila["nombre"], perfil_bd=fila["perfil_bd"], permisos=permisos)
-    rol.id = fila["id"]
+    rol._id = fila["id"]
     return rol
 
 def crear(rol: Rol) -> int:
     with cursor_db() as (cursor, _):
         cursor.execute(
             "INSERT INTO roles (nombre, perfil_bd, permisos) VALUES (%s, %s, %s)",
-            (rol.nombre, rol.perfil_bd, json.dumps(list(rol.permisos))),
+            (rol._nombre, rol._perfil_bd, json.dumps(list(rol._permisos))),
         )
-        rol.id = cursor.lastrowid
-    return rol.id
+        rol._id = cursor.lastrowid
+    return rol._id
 
 def buscar_por_id(id_rol: int) -> Rol | None:
     with cursor_db(dictionary=True) as (cursor, _):
@@ -41,5 +41,5 @@ def actualizar(rol: Rol) -> None:
     with cursor_db() as (cursor, _):
         cursor.execute(
             "UPDATE roles SET nombre = %s, perfil_bd = %s, permisos = %s WHERE id = %s",
-            (rol.nombre, rol.perfil_bd, json.dumps(list(rol.permisos)), rol.id),
+            (rol._nombre, rol._perfil_bd, json.dumps(list(rol._permisos)), rol._id),
         )

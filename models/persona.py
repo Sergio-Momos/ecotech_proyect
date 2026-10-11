@@ -27,76 +27,76 @@ class Persona:
         correo: str,
         rut: str,
     ) -> None:
-        self._id = None
+        self._valor_id = None
         if id is not None:
-            self.id = id  # pasa por el setter, con su validación
-        self.nombre = nombre
-        self.direccion = direccion
-        self.telefono = telefono
-        self.correo = correo
-        self.rut = rut
+            self._id = id  # pasa por el setter, con su validación
+        self._nombre = nombre
+        self._direccion = direccion
+        self._telefono = telefono
+        self._correo = correo
+        self._rut = rut
 
     @property
-    def id(self) -> int | None:
-        return self._id
+    def _id(self) -> int | None:
+        return self._valor_id
 
-    @id.setter
-    def id(self, valor: int) -> None:
-        if self._id is not None:
+    @_id.setter
+    def _id(self, valor: int) -> None:
+        if self._valor_id is not None:
             raise AttributeError("El id ya fue asignado y no puede modificarse.")
         validar_id(valor, "El id")
-        self._id = valor
+        self._valor_id = valor
 
     @property
-    def nombre(self) -> str:
-        return self._nombre
+    def _nombre(self) -> str:
+        return self._valor_nombre
 
-    @nombre.setter
-    def nombre(self, valor: str) -> None:
-        self._nombre = validar_con_patron(
+    @_nombre.setter
+    def _nombre(self, valor: str) -> None:
+        self._valor_nombre = validar_con_patron(
             valor, "El nombre", PATRON_NOMBRE, ERROR_SOLO_LETRAS
         )
 
     @property
-    def direccion(self) -> str:
-        return self._direccion
+    def _direccion(self) -> str:
+        return self._valor_direccion
 
-    @direccion.setter
-    def direccion(self, valor: str) -> None:
-        self._direccion = validar_texto(valor, "La dirección")
+    @_direccion.setter
+    def _direccion(self, valor: str) -> None:
+        self._valor_direccion = validar_texto(valor, "La dirección")
 
     @property
-    def telefono(self) -> str:
-        return self._telefono
+    def _telefono(self) -> str:
+        return self._valor_telefono
 
-    @telefono.setter
-    def telefono(self, valor: str) -> None:
-        self._telefono = validar_con_patron(
+    @_telefono.setter
+    def _telefono(self, valor: str) -> None:
+        self._valor_telefono = validar_con_patron(
             valor, "El teléfono", PATRON_TELEFONO, ERROR_TELEFONO
         )
 
     @property
-    def correo(self) -> str:
-        return self._correo
+    def _correo(self) -> str:
+        return self._valor_correo
 
-    @correo.setter
-    def correo(self, valor: str) -> None:
-        self._correo = validar_con_patron(valor, "El correo", PATRON_CORREO, ERROR_CORREO)
+    @_correo.setter
+    def _correo(self, valor: str) -> None:
+        self._valor_correo = validar_con_patron(valor, "El correo", PATRON_CORREO, ERROR_CORREO)
 
     @property
-    def rut(self) -> str:
-        return self._rut
+    def _rut(self) -> str:
+        return self._valor_rut
 
-    @rut.setter
-    def rut(self, valor: str) -> None:
+    @_rut.setter
+    def _rut(self, valor: str) -> None:
         valor = normalizar_rut(valor)
         if not validar_rut_chileno(valor):
             raise ValueError(ERROR_RUT)
-        self._rut = valor
+        self._valor_rut = valor
 
     def get_nombre_completo(self) -> str:
         """Devuelve el nombre tal como fue definido en el modelo."""
-        return self.nombre
+        return self._nombre
 
     def __str__(self) -> str:
-        return f"{self.get_nombre_completo()} (RUT: {self.rut})"
+        return f"{self.get_nombre_completo()} (RUT: {self._rut})"

@@ -17,11 +17,11 @@ def crear(departamento: Departamento) -> int:
     with cursor_db() as (cursor, _):
         cursor.execute(
             "INSERT INTO departamentos (nombre, gerente_id) VALUES (%s, %s)",
-            (departamento.nombre, departamento.gerente.id),
+            (departamento._nombre, departamento._gerente._id),
         )
-        departamento.id = cursor.lastrowid
+        departamento._id = cursor.lastrowid
 
-    return departamento.id
+    return departamento._id
 
 
 def buscar_por_id(id_departamento: int) -> Departamento | None:
@@ -41,9 +41,9 @@ def actualizar(departamento: Departamento) -> None:
         cursor.execute(
             "UPDATE departamentos SET nombre = %s, gerente_id = %s WHERE id = %s",
             (
-                departamento.nombre,
-                departamento.gerente.id,
-                departamento.id,
+                departamento._nombre,
+                departamento._gerente._id,
+                departamento._id,
             ),
         )
 

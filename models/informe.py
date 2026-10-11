@@ -8,38 +8,38 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 
 
 class Informe:
-    TIPO_EMPLEADOS = "empleados"
-    TIPO_DEPARTAMENTOS = "departamentos"
-    TIPO_PROYECTOS = "proyectos"
-    TIPO_REGISTROS_TIEMPO = "registros_tiempo"
+    _TIPO_EMPLEADOS = "empleados"
+    _TIPO_DEPARTAMENTOS = "departamentos"
+    _TIPO_PROYECTOS = "proyectos"
+    _TIPO_REGISTROS_TIEMPO = "registros_tiempo"
 
-    TIPOS_VALIDOS = frozenset(
-        {TIPO_EMPLEADOS, TIPO_DEPARTAMENTOS, TIPO_PROYECTOS, TIPO_REGISTROS_TIEMPO}
+    _TIPOS_VALIDOS = frozenset(
+        {_TIPO_EMPLEADOS, _TIPO_DEPARTAMENTOS, _TIPO_PROYECTOS, _TIPO_REGISTROS_TIEMPO}
     )
 
     def __init__(self, tipo: str) -> None:
-        self.tipo = tipo
-        self._fecha_generacion = date.today()  # se autoasigna, no la pasa nadie
+        self._tipo = tipo
+        self._valor_fecha_generacion = date.today()  # se autoasigna, no la pasa nadie
         self._contenido: list[dict[str, Any]] = []
-        self._formato = None  # se fija recién al exportar
+        self._valor_formato = None  # se fija recién al exportar
 
     @property
-    def tipo(self) -> str:
-        return self._tipo
+    def _tipo(self) -> str:
+        return self._valor_tipo
 
-    @tipo.setter
-    def tipo(self, valor: str) -> None:
-        if valor not in self.TIPOS_VALIDOS:
+    @_tipo.setter
+    def _tipo(self, valor: str) -> None:
+        if valor not in self._TIPOS_VALIDOS:
             raise ValueError(f"Tipo de informe inválido: {valor}")
-        self._tipo = valor
+        self._valor_tipo = valor
 
     @property
-    def fecha_generacion(self) -> date:
-        return self._fecha_generacion
+    def _fecha_generacion(self) -> date:
+        return self._valor_fecha_generacion
 
     @property
-    def formato(self) -> str:
-        return self._formato
+    def _formato(self) -> str:
+        return self._valor_formato
 
     def generar_informe(self, filas: list[dict[str, Any]]) -> None:
         # `filas` ya viene aplanado a valores simples por quien llama a
@@ -64,7 +64,7 @@ class Informe:
             ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
         ]))
         doc.build([tabla])
-        self._formato = "pdf"
+        self._valor_formato = "pdf"
         return ruta
 
     def exportar_excel(self, ruta: str) -> str:
@@ -77,5 +77,5 @@ class Informe:
         for fila in self._contenido:
             hoja.append([fila[c] for c in columnas])
         wb.save(ruta)
-        self._formato = "excel"
+        self._valor_formato = "excel"
         return ruta

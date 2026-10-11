@@ -35,14 +35,14 @@ def _select_cifrado(where: str) -> str:
 
 
 def crear(empleado: Empleado) -> int:
-    rut_hash = Seguridad.hash_busqueda(empleado.rut)
+    rut_hash = Seguridad.hash_busqueda(empleado._rut)
 
     with cursor_db() as (cursor, _):
         cursor.execute("SELECT id FROM empleados WHERE rut_hash = %s", (rut_hash,))
         if cursor.fetchone() is not None:
-            raise ValueError(f"Ya existe un empleado con el RUT {empleado.rut}.")
+            raise ValueError(f"Ya existe un empleado con el RUT {empleado._rut}.")
 
-        salario_centavos = round(empleado.salario * 100)
+        salario_centavos = round(empleado._salario * 100)
         cursor.execute(
             """
             INSERT INTO empleados
@@ -53,19 +53,19 @@ def crear(empleado: Empleado) -> int:
                     %s, AES_ENCRYPT(%s, %s), %s)
             """,
             (
-                empleado.nombre,
-                empleado.direccion, AES_KEY,
-                empleado.telefono,  AES_KEY,
-                empleado.correo,    AES_KEY,
-                empleado.rut,       AES_KEY,
+                empleado._nombre,
+                empleado._direccion, AES_KEY,
+                empleado._telefono,  AES_KEY,
+                empleado._correo,    AES_KEY,
+                empleado._rut,       AES_KEY,
                 rut_hash,
                 str(salario_centavos), AES_KEY,
-                empleado.fecha_inicio_contrato,
+                empleado._fecha_inicio_contrato,
             ),
         )
-        empleado.id = cursor.lastrowid
+        empleado._id = cursor.lastrowid
 
-    return empleado.id
+    return empleado._id
 
 
 def buscar_por_id(id_empleado: int) -> Empleado | None:
@@ -129,17 +129,17 @@ def listar_por_proyecto(proyecto_id: int) -> list[Empleado]:
 
 
 def actualizar(empleado: Empleado) -> None:
-    rut_hash = Seguridad.hash_busqueda(empleado.rut)
+    rut_hash = Seguridad.hash_busqueda(empleado._rut)
 
     with cursor_db() as (cursor, _):
         cursor.execute(
             "SELECT id FROM empleados WHERE rut_hash = %s AND id != %s",
-            (rut_hash, empleado.id),
+            (rut_hash, empleado._id),
         )
         if cursor.fetchone() is not None:
-            raise ValueError(f"Ya existe otro empleado con el RUT {empleado.rut}.")
+            raise ValueError(f"Ya existe otro empleado con el RUT {empleado._rut}.")
 
-        salario_centavos = round(empleado.salario * 100)
+        salario_centavos = round(empleado._salario * 100)
         cursor.execute(
             """
             UPDATE empleados
@@ -154,15 +154,15 @@ def actualizar(empleado: Empleado) -> None:
             WHERE id = %s
             """,
             (
-                empleado.nombre,
-                empleado.direccion, AES_KEY,
-                empleado.telefono,  AES_KEY,
-                empleado.correo,    AES_KEY,
-                empleado.rut,       AES_KEY,
+                empleado._nombre,
+                empleado._direccion, AES_KEY,
+                empleado._telefono,  AES_KEY,
+                empleado._correo,    AES_KEY,
+                empleado._rut,       AES_KEY,
                 rut_hash,
                 str(salario_centavos), AES_KEY,
-                empleado.fecha_inicio_contrato,
-                empleado.id,
+                empleado._fecha_inicio_contrato,
+                empleado._id,
             ),
         )
 

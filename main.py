@@ -27,21 +27,21 @@ def sembrar_roles() -> dict:
         (Rol.empleado_estandar, "empleado"),
         (Rol.ti, "ti"),
     ]:
-        rol = rol_repo.buscar_por_nombre(factory().nombre)
+        rol = rol_repo.buscar_por_nombre(factory()._nombre)
         if rol is None:
             rol = factory()
             rol_repo.crear(rol)
-            print(f"  Creado: {rol.nombre} (id: {rol.id})")
+            print(f"  Creado: {rol._nombre} (id: {rol._id})")
         else:
             # Resincronizar permisos por si cambiaron en el código
-            faltantes = factory().permisos - rol.permisos
+            faltantes = factory()._permisos - rol._permisos
             if faltantes:
                 for p in faltantes:
                     rol.agregar_permiso(p)
                 rol_repo.actualizar(rol)
-                print(f"  Actualizado: {rol.nombre} (+{len(faltantes)} permisos)")
+                print(f"  Actualizado: {rol._nombre} (+{len(faltantes)} permisos)")
             else:
-                print(f"  Ya existía: {rol.nombre} (id: {rol.id})")
+                print(f"  Ya existía: {rol._nombre} (id: {rol._id})")
         roles[clave] = rol
     return roles
 
@@ -59,9 +59,9 @@ def sembrar_empleados(roles: dict) -> dict:
     creados = {}
     for nombre, dir, tel, correo, rut, salario, fecha, rol_clave in datos:
         existentes = empleado_repo.listar_todos(incluir_inactivos=True)
-        if any(e.nombre == nombre for e in existentes):
-            emp = next(e for e in existentes if e.nombre == nombre)
-            print(f"  Ya existía: {nombre} (id: {emp.id})")
+        if any(e._nombre == nombre for e in existentes):
+            emp = next(e for e in existentes if e._nombre == nombre)
+            print(f"  Ya existía: {nombre} (id: {emp._id})")
         else:
             emp = Empleado(
                 id=None, nombre=nombre, direccion=dir, telefono=tel,
@@ -69,7 +69,7 @@ def sembrar_empleados(roles: dict) -> dict:
                 fecha_inicio_contrato=fecha,
             )
             empleado_repo.crear(emp)
-            print(f"  Creado: {nombre} (id: {emp.id})")
+            print(f"  Creado: {nombre} (id: {emp._id})")
         creados[nombre] = (emp, rol_clave)
     return creados
 
@@ -82,22 +82,22 @@ def sembrar_usuarios(empleados_roles: dict, roles: dict) -> None:
         "empleado": "Empleado#1",
     }
     for nombre, (emp, rol_clave) in empleados_roles.items():
-        usuario = usuario_repo.buscar_por_id(emp.id)
+        usuario = usuario_repo.buscar_por_id(emp._id)
         if usuario is not None:
-            print(f"  Ya existía: {usuario.username}")
+            print(f"  Ya existía: {usuario._username}")
         else:
             usuario = usuario_repo.crear_para_empleado(
                 emp,
                 password=contrasenas[rol_clave],
                 rol=roles[rol_clave],
             )
-            print(f"  Creado: {usuario.username}  (contraseña inicial: {contrasenas[rol_clave]})")
+            print(f"  Creado: {usuario._username}  (contraseña inicial: {contrasenas[rol_clave]})")
 
 
 def sembrar_departamento(empleados_roles: dict) -> None:
     print("\n--- Departamento base ---")
     existentes = departamento_repo.listar_todos()
-    if any(d.nombre == "RecursosHumanos" for d in existentes):
+    if any(d._nombre == "RecursosHumanos" for d in existentes):
         print("  Ya existía: RecursosHumanos")
         return
     ana = empleados_roles.get("Ana Torres")
@@ -109,14 +109,14 @@ def sembrar_departamento(empleados_roles: dict) -> None:
     departamento_repo.crear(depto)
     juan = empleados_roles.get("Juan Perez")
     if juan:
-        departamento_repo.asignar_empleado(depto.id, juan[0].id)
-    print(f"  Creado: RecursosHumanos (id: {depto.id})")
+        departamento_repo.asignar_empleado(depto._id, juan[0]._id)
+    print(f"  Creado: RecursosHumanos (id: {depto._id})")
 
 
 def sembrar_proyecto(empleados_roles: dict) -> None:
     print("\n--- Proyecto base ---")
     existentes = proyecto_repo.listar_todos(incluir_inactivos=True)
-    if any(p.nombre == "PanelesSolares" for p in existentes):
+    if any(p._nombre == "PanelesSolares" for p in existentes):
         print("  Ya existía: PanelesSolares")
         return
     proyecto = Proyecto(
@@ -128,8 +128,8 @@ def sembrar_proyecto(empleados_roles: dict) -> None:
     for nombre in ("Ana Torres", "Camila Rios"):
         emp_info = empleados_roles.get(nombre)
         if emp_info:
-            proyecto_repo.asignar_empleado(proyecto.id, emp_info[0].id)
-    print(f"  Creado: PanelesSolares (id: {proyecto.id})")
+            proyecto_repo.asignar_empleado(proyecto._id, emp_info[0]._id)
+    print(f"  Creado: PanelesSolares (id: {proyecto._id})")
 
 
 def main():

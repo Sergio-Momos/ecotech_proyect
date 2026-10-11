@@ -21,7 +21,7 @@ def crear(usuario: Usuario) -> None:
     with cursor_db() as (cursor, _):
         cursor.execute(
             "INSERT INTO usuarios (id, username, password_hash, rol_id) VALUES (%s, %s, %s, %s)",
-            (usuario.id, usuario.username, usuario._password, usuario.rol.id),
+            (usuario._id, usuario._username, usuario._valor_password, usuario._rol._id),
         )
 
 
@@ -58,10 +58,10 @@ def crear_para_empleado(empleado, password: str, rol) -> Usuario:
     username garantizado único contra la BD (no contra memoria), y guarda
     de una vez. Esta es la función que debería usar la GUI — no
     Empleado.crear_usuario(), que solo resuelve colisiones en memoria."""
-    username = generar_username_unico(empleado.nombre)
-    usuario = Usuario(id=empleado.id, username=username, password=password, rol=rol)
+    username = generar_username_unico(empleado._nombre)
+    usuario = Usuario(id=empleado._id, username=username, password=password, rol=rol)
     crear(usuario)
-    empleado._usuario = usuario
+    empleado._valor_usuario = usuario
     return usuario
 
 def desactivar(id_usuario: int) -> None:
@@ -85,7 +85,7 @@ def cambiar_password_propio(usuario: Usuario, password_actual: str, nueva_passwo
     """Cambio por el propio usuario (verifica la contraseña actual primero)."""
     if not usuario.verificar_password(password_actual):
         raise ValueError("La contraseña actual es incorrecta.")
-    cambiar_password(usuario.id, nueva_password)
+    cambiar_password(usuario._id, nueva_password)
 
 def buscar_por_username_activo(username: str) -> Usuario | None:
     """Solo devuelve el usuario si está activo — para el login."""

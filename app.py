@@ -14,7 +14,7 @@ class App(ctk.CTk):
         self.title("EcoTech Solutions — Gestión RRHH")
         self.geometry("900x600")
 
-        self.usuario_actual = None
+        self._usuario_actual = None
 
         self._contenedor = ctk.CTkFrame(self)
         self._contenedor.pack(fill="both", expand=True)
@@ -30,15 +30,15 @@ class App(ctk.CTk):
         self._frame_actual = nuevo
 
     def iniciar_sesion_exitosa(self, usuario) -> None:
-        self.usuario_actual = usuario
-        establecer_perfil_activo(usuario.rol.perfil_bd)
-        accion(usuario.id, "LOGIN_EXITOSO")
+        self._usuario_actual = usuario
+        establecer_perfil_activo(usuario._rol._perfil_bd)
+        accion(usuario._id, "LOGIN_EXITOSO")
         self.navegar_a(DashboardView)
 
     def cerrar_sesion(self) -> None:
-        if self.usuario_actual:
-            accion(self.usuario_actual.id, "LOGOUT")
-        self.usuario_actual = None
+        if self._usuario_actual:
+            accion(self._usuario_actual._id, "LOGOUT")
+        self._usuario_actual = None
         limpiar_perfil_activo()
         self.navegar_a(LoginView)
 

@@ -13,7 +13,7 @@ def _fila_a_registro(fila: dict) -> RegistroTiempo:
         empleado=empleado,
         proyecto=proyecto,
     )
-    registro.id = fila["id"]
+    registro._id = fila["id"]
     return registro
 
 
@@ -26,16 +26,16 @@ def crear(registro: RegistroTiempo) -> int:
             VALUES (%s, %s, %s, %s, %s)
             """,
             (
-                registro.fecha,
-                registro.horas_trabajadas,
-                registro.descripcion,
-                registro.empleado.id,
-                registro.proyecto.id,
+                registro._fecha,
+                registro._horas_trabajadas,
+                registro._descripcion,
+                registro._empleado._id,
+                registro._proyecto._id,
             ),
         )
-        registro.id = cursor.lastrowid
+        registro._id = cursor.lastrowid
 
-    return registro.id
+    return registro._id
 
 def buscar_por_id(id_registro: int) -> RegistroTiempo | None:
     with cursor_db(dictionary=True) as (cursor, _):
@@ -58,24 +58,24 @@ def actualizar(registro: RegistroTiempo) -> None:
             WHERE id = %s
             """,
             (
-                registro.fecha,
-                registro.horas_trabajadas,
-                registro.descripcion,
-                registro.proyecto.id,
-                registro.id,
+                registro._fecha,
+                registro._horas_trabajadas,
+                registro._descripcion,
+                registro._proyecto._id,
+                registro._id,
             ),
         )
 
 
 def cargar_historial(empleado) -> None:
-    """Puebla empleado._registros_tiempo con lo ya persistido."""
+    """Puebla empleado._valor_registros_tiempo con lo ya persistido."""
 
     empleado._limpiar_registros_tiempo()
 
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute(
             "SELECT * FROM registros_tiempo WHERE empleado_id = %s",
-            (empleado.id,)
+            (empleado._id,)
         )
         filas = cursor.fetchall()
 
@@ -88,7 +88,7 @@ def cargar_historial(empleado) -> None:
             empleado=empleado,
             proyecto=proyecto,
         )
-        registro.id = fila["id"]
+        registro._id = fila["id"]
         empleado._agregar_registro_tiempo(registro)
 
 def listar_por_proyecto(proyecto_id: int) -> list[RegistroTiempo]:

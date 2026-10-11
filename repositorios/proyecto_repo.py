@@ -24,14 +24,14 @@ def crear(proyecto: Proyecto) -> int:
             VALUES (%s, %s, %s)
             """,
             (
-                proyecto.nombre,
-                proyecto.descripcion,
-                proyecto.fecha_inicio,
+                proyecto._nombre,
+                proyecto._descripcion,
+                proyecto._fecha_inicio,
         )
         )
-        proyecto.id = cursor.lastrowid   # ← sincroniza el objeto en memoria
+        proyecto._id = cursor.lastrowid   # ← sincroniza el objeto en memoria
 
-    return proyecto.id
+    return proyecto._id
 
 def listar_todos(incluir_inactivos: bool = False) -> list[Proyecto]:
     with cursor_db(dictionary=True) as (cursor, _):
@@ -48,10 +48,10 @@ def actualizar(proyecto: Proyecto) -> None:
         cursor.execute(
             "UPDATE proyectos SET nombre = %s, descripcion = %s, fecha_inicio = %s WHERE id = %s",
             (
-                proyecto.nombre,
-                proyecto.descripcion,
-                proyecto.fecha_inicio,
-                proyecto.id,
+                proyecto._nombre,
+                proyecto._descripcion,
+                proyecto._fecha_inicio,
+                proyecto._id,
             ),
         )
 

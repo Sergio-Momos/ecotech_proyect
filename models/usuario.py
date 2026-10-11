@@ -14,49 +14,49 @@ class Usuario:
 
     def __init__(self, id: int, username: str, password: str, rol: Rol, activo: bool= True) -> None:
         validar_id(id, "El id")
-        self._id = id
-        self.username = username
-        self.password = password
-        self.rol = rol
-        self.activo = activo
+        self._valor_id = id
+        self._username = username
+        self._password = password
+        self._rol = rol
+        self._activo = activo
         
 
     # --- id ---
     @property
-    def id(self) -> int:
-        return self._id
+    def _id(self) -> int:
+        return self._valor_id
 
     # --- username ---
     @property
-    def username(self) -> str:
-        return self._username
+    def _username(self) -> str:
+        return self._valor_username
 
-    @username.setter
-    def username(self, valor: str) -> None:
-        self._username = validar_con_patron(
+    @_username.setter
+    def _username(self, valor: str) -> None:
+        self._valor_username = validar_con_patron(
             valor, "El username", PATRON_USERNAME, ERROR_USERNAME
         )
 
     # --- password (escritura solamente, hasheada vía Seguridad) ---
     @property
-    def password(self) -> str:
+    def _password(self) -> str:
         raise AttributeError("Por seguridad, la contraseña no puede ser leída.")
 
-    @password.setter
-    def password(self, valor: str) -> None:
+    @_password.setter
+    def _password(self, valor: str) -> None:
         valor_validado = validar_password(valor, PATRON_PASSWORD, ERROR_PASSWORD)
-        self._password = Seguridad.hashear_password(valor_validado)
+        self._valor_password = Seguridad.hashear_password(valor_validado)
 
     # --- rol ---
     @property
-    def rol(self) -> Rol:
-        return self._rol
+    def _rol(self) -> Rol:
+        return self._valor_rol
 
-    @rol.setter
-    def rol(self, valor: Rol) -> None:
+    @_rol.setter
+    def _rol(self, valor: Rol) -> None:
         if not isinstance(valor, Rol):
             raise TypeError("El rol debe ser una instancia de la clase Rol.")
-        self._rol = valor
+        self._valor_rol = valor
 
     # --- generación de username (pieza nueva) ---
     @staticmethod
@@ -66,7 +66,7 @@ class Usuario:
 
     # usuario.py — agregar, junto a los demás métodos de instancia
     def verificar_password(self, password: str) -> bool:
-        return Seguridad.verificar_password(password, self._password)
+        return Seguridad.verificar_password(password, self._valor_password)
 
     @classmethod
     def generar_base_username(cls, nombre_completo: str) -> str:
@@ -78,7 +78,7 @@ class Usuario:
         return f"{inicial}.{apellido}"[: cls._LARGO_MAXIMO_USERNAME]
 
     def __str__(self) -> str:
-        return f"Usuario: {self.username} (ID: {self.id})"
+        return f"Usuario: {self._username} (ID: {self._id})"
 
     @classmethod
     def reconstruir(cls, id: int, username: str, password_hash: str, rol: Rol, activo: bool= True) -> "Usuario":
@@ -89,25 +89,25 @@ class Usuario:
         el setter normal sin volver a hashearlo por error.
         """
         usuario = cls.__new__(cls)   # crea la instancia SIN llamar a __init__
-        usuario._id = id
-        usuario.username = username        # sigue pasando por el setter (valida formato)
-        usuario._password = password_hash  # asignación directa — ya es un hash, no re-hashear
-        usuario.rol = rol
-        usuario._activo = activo
+        usuario._valor_id = id
+        usuario._username = username        # sigue pasando por el setter (valida formato)
+        usuario._valor_password = password_hash  # asignación directa — ya es un hash, no re-hashear
+        usuario._rol = rol
+        usuario._valor_activo = activo
         return usuario
 
     @property
-    def activo(self) -> bool:
-        return self._activo
+    def _activo(self) -> bool:
+        return self._valor_activo
 
-    @activo.setter
-    def activo(self, valor: bool) -> None:
+    @_activo.setter
+    def _activo(self, valor: bool) -> None:
         if not isinstance(valor, bool):
             raise TypeError("El estado activo debe ser un booleano.")
-        self._activo = valor
+        self._valor_activo = valor
 
     def desactivar(self) -> None:
-        self.activo = False
+        self._activo = False
 
     def activar(self) -> None:
-        self.activo = True
+        self._activo = True

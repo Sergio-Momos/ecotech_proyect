@@ -6,87 +6,87 @@ from datetime import date
 
 class Proyecto:
     def __init__(self, id: int| None, nombre: str, descripcion: str, fecha_inicio: date, activo: bool = True):
-        self._id = None
+        self._valor_id = None
         if id is not None:
-            self.id = id
-        self.nombre = nombre
-        self.descripcion = descripcion
-        self.fecha_inicio = fecha_inicio
-        self._empleados = []
-        self.activo = activo
+            self._id = id
+        self._nombre = nombre
+        self._descripcion = descripcion
+        self._fecha_inicio = fecha_inicio
+        self._valor_empleados = []
+        self._activo = activo
     
     @property
-    def id(self) -> int| None:
-        return self._id
+    def _id(self) -> int| None:
+        return self._valor_id
 
-    @id.setter
-    def id(self, valor: int) -> None:
-        if self._id is not None:
+    @_id.setter
+    def _id(self, valor: int) -> None:
+        if self._valor_id is not None:
             raise AttributeError("El id ya fue asignado y no puede modificarse.")
         validar_id(valor, "El id")
-        self._id = valor
+        self._valor_id = valor
 
     
     @property
-    def nombre(self) -> str:
-        return self._nombre
+    def _nombre(self) -> str:
+        return self._valor_nombre
     
-    @nombre.setter
-    def nombre(self, valor: str) -> None:
-        self._nombre = validar_con_patron(
+    @_nombre.setter
+    def _nombre(self, valor: str) -> None:
+        self._valor_nombre = validar_con_patron(
             valor, "El nombre", PATRON_NOMBRE, ERROR_SOLO_LETRAS
         )
 
     @property
-    def descripcion(self) -> str:
-        return self._descripcion
+    def _descripcion(self) -> str:
+        return self._valor_descripcion
 
-    @descripcion.setter
-    def descripcion(self, valor: str) -> None:
-        self._descripcion = validar_texto(valor, "La descripción")
+    @_descripcion.setter
+    def _descripcion(self, valor: str) -> None:
+        self._valor_descripcion = validar_texto(valor, "La descripción")
 
     @property
-    def fecha_inicio(self) -> date:
-        return self._fecha_inicio
+    def _fecha_inicio(self) -> date:
+        return self._valor_fecha_inicio
 
-    @fecha_inicio.setter
-    def fecha_inicio(self, valor: date) -> None:
+    @_fecha_inicio.setter
+    def _fecha_inicio(self, valor: date) -> None:
         if not isinstance(valor, date):
             raise TypeError("La fecha de inicio debe ser una instancia de date")
-        self._fecha_inicio = valor
+        self._valor_fecha_inicio = valor
 
     @property
-    def empleados(self) -> tuple:
-        return tuple(self._empleados)
+    def _empleados(self) -> tuple:
+        return tuple(self._valor_empleados)
 
     def asignar_empleado(self, empleado: Empleado) -> None:
         if not isinstance(empleado, Empleado):
             raise TypeError("El empleado debe ser una instancia de la clase Empleado.")
-        if any(e.id == empleado.id for e in self._empleados):
-            raise ValueError(f"El empleado con id {empleado.id} ya participa en este proyecto.")
-        self._empleados.append(empleado)
+        if any(e._id == empleado._id for e in self._valor_empleados):
+            raise ValueError(f"El empleado con id {empleado._id} ya participa en este proyecto.")
+        self._valor_empleados.append(empleado)
         empleado._agregar_proyecto(self)   # ← mantiene sincronizada la otra lista
 
     def quitar_empleado(self, empleado: Empleado) -> None:
         if not isinstance(empleado, Empleado):
             raise TypeError("El empleado debe ser una instancia de la clase Empleado.")
-        if not any(e.id == empleado.id for e in self._empleados):
-            raise ValueError(f"El empleado con id {empleado.id} no participa en este proyecto.")
-        self._empleados = [e for e in self._empleados if e.id != empleado.id]
+        if not any(e._id == empleado._id for e in self._valor_empleados):
+            raise ValueError(f"El empleado con id {empleado._id} no participa en este proyecto.")
+        self._valor_empleados = [e for e in self._valor_empleados if e._id != empleado._id]
         empleado._quitar_proyecto(self)
 
     @property
-    def activo(self) -> bool:
-        return self._activo
+    def _activo(self) -> bool:
+        return self._valor_activo
 
-    @activo.setter
-    def activo(self, valor: bool) -> None:
+    @_activo.setter
+    def _activo(self, valor: bool) -> None:
         if not isinstance(valor, bool):
             raise TypeError("El estado activo debe ser un booleano.")
-        self._activo = valor
+        self._valor_activo = valor
 
     def desactivar(self) -> None:
-        self.activo = False
+        self._activo = False
 
     def activar(self) -> None:
-        self.activo = True
+        self._activo = True

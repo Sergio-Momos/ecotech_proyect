@@ -11,19 +11,19 @@ class DashboardView(ctk.CTkFrame):
     def __init__(self, parent, app):
         super().__init__(parent)
 
-        self.app = app
-        usuario = app.usuario_actual
-        rol = usuario.rol
+        self._app = app
+        usuario = app._usuario_actual
+        rol = usuario._rol
 
         ctk.CTkLabel(
             self,
-            text=f"Bienvenido, {usuario.username}",
+            text=f"Bienvenido, {usuario._username}",
             font=ctk.CTkFont(size=20, weight="bold"),
         ).pack(pady=(30, 5))
 
         ctk.CTkLabel(
             self,
-            text=f"Rol: {rol.nombre}",
+            text=f"Rol: {rol._nombre}",
             text_color="gray",
         ).pack(pady=(0, 30))
 
@@ -31,12 +31,12 @@ class DashboardView(ctk.CTkFrame):
         botones.pack(pady=10)
 
         opciones = [
-            (Rol.CREAR_EMPLEADOS, "Gestionar Empleados", lambda: app.navegar_a(EmpleadosView)),
-            (Rol.ASIGNAR_EMPLEADOS_DEPARTAMENTO, "Gestionar Departamentos", lambda: app.navegar_a(DepartamentosView)),
-            (Rol.ASIGNAR_EMPLEADOS_PROYECTO, "Gestionar Proyectos", lambda: app.navegar_a(ProyectosView)),
-            (Rol.LEER_REGISTROS_TODOS, "Ver todos los registros de horas", lambda: app.navegar_a(RegistrosView)),
-            (Rol.LEER_REGISTROS_PROPIOS, "Mis horas trabajadas", lambda: app.navegar_a(RegistrosView)),
-            (Rol.CREAR_USUARIOS, "Gestión de usuarios", lambda: app.navegar_a(TiView)),
+            (Rol._CREAR_EMPLEADOS, "Gestionar Empleados", lambda: app.navegar_a(EmpleadosView)),
+            (Rol._ASIGNAR_EMPLEADOS_DEPARTAMENTO, "Gestionar Departamentos", lambda: app.navegar_a(DepartamentosView)),
+            (Rol._ASIGNAR_EMPLEADOS_PROYECTO, "Gestionar Proyectos", lambda: app.navegar_a(ProyectosView)),
+            (Rol._LEER_REGISTROS_TODOS, "Ver todos los registros de horas", lambda: app.navegar_a(RegistrosView)),
+            (Rol._LEER_REGISTROS_PROPIOS, "Mis horas trabajadas", lambda: app.navegar_a(RegistrosView)),
+            (Rol._CREAR_USUARIOS, "Gestión de usuarios", lambda: app.navegar_a(TiView)),
         ]
 
         for permiso, texto, comando in opciones:
