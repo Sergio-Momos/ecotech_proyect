@@ -104,7 +104,7 @@ class NominaProyectoView(ctk.CTkToplevel):
             fila.pack(fill="x", pady=3)
             ctk.CTkLabel(fila, text=empleado._nombre).pack(side="left", padx=10, pady=6)
             ctk.CTkButton(
-                fila, text="Quitar", width=80, fg_color="#B3261E",
+                fila, text="Quitar", width=80, fg_color="#902923",
                 command=lambda e=empleado: self._quitar(e),
             ).pack(side="right", padx=6)
 
