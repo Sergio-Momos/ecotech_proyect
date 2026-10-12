@@ -7,6 +7,7 @@ from gui.departamentos_view import DepartamentosView
 from gui.proyectos_view import ProyectosView
 from gui.registros_view import RegistrosView
 from gui.ti_view import TiView
+from gui.informes_view import InformesView
 class DashboardView(ctk.CTkFrame):
     def __init__(self, parent, app):
         super().__init__(parent)
@@ -30,12 +31,18 @@ class DashboardView(ctk.CTkFrame):
         botones = ctk.CTkFrame(self, fg_color="transparent")
         botones.pack(pady=10)
 
+        texto_registros = (
+            "Registros de horas"
+            if rol.tiene_permiso(Rol._LEER_REGISTROS_TODOS)
+            else "Mis horas trabajadas"
+        )
+
         opciones = [
             (Rol._CREAR_EMPLEADOS, "Gestionar Empleados", lambda: app.navegar_a(EmpleadosView)),
             (Rol._ASIGNAR_EMPLEADOS_DEPARTAMENTO, "Gestionar Departamentos", lambda: app.navegar_a(DepartamentosView)),
             (Rol._ASIGNAR_EMPLEADOS_PROYECTO, "Gestionar Proyectos", lambda: app.navegar_a(ProyectosView)),
-            (Rol._LEER_REGISTROS_TODOS, "Ver todos los registros de horas", lambda: app.navegar_a(RegistrosView)),
-            (Rol._LEER_REGISTROS_PROPIOS, "Mis horas trabajadas", lambda: app.navegar_a(RegistrosView)),
+            (Rol._LEER_REGISTROS_PROPIOS,  texto_registros, lambda: app.navegar_a(RegistrosView)),
+            (Rol._LEER_REGISTROS_TODOS, "Informes", lambda: app.navegar_a(InformesView)),
             (Rol._CREAR_USUARIOS, "Gestión de usuarios", lambda: app.navegar_a(TiView)),
         ]
 
