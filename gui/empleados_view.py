@@ -7,6 +7,7 @@ from models.empleado import Empleado
 from models.rol import Rol
 from repositorios import empleado_repo
 from utils.auditoria import accion, error as log_error
+from mysql.connector import Error as ErrorBD
 
 class EmpleadoFormView(ctk.CTkToplevel):
     """Formulario modal para crear o editar un Empleado."""
@@ -16,7 +17,7 @@ class EmpleadoFormView(ctk.CTkToplevel):
         self.on_guardado = on_guardado
         self.empleado_existente = empleado_existente
         self.title("Editar empleado" if empleado_existente else "Nuevo empleado")
-        self.geometry("380x520")
+        self.geometry("380x680")
         self.grab_set()  # bloquea la ventana principal mientras esto está abierto
         self.usuario_id = usuario_id
 
@@ -42,9 +43,16 @@ class EmpleadoFormView(ctk.CTkToplevel):
         ctk.CTkButton(self, text="Guardar", command=self._guardar).pack(pady=25)
 
     def _guardar(self) -> None:
+        accion_log = "CREAR_EMPLEADO" if self.empleado_existente is None else "ACTUALIZAR_EMPLEADO"
         try:
-            fecha = datetime.strptime(self.entrada_fecha.get(), "%Y-%m-%d").date()
-            salario = float(self.entradas["salario"].get())
+            try:
+                fecha = datetime.strptime(self.entrada_fecha.get(), "%Y-%m-%d").date()
+            except ValueError:
+                raise ValueError("La fecha debe tener el formato AAAA-MM-DD, por ejemplo 2026-10-09.") from None
+            try:
+                salario = float(self.entradas["salario"].get())
+            except ValueError:
+                raise ValueError("El salario debe ser un número, sin puntos ni símbolos. Ejemplo: 650000") from None
 
             if self.empleado_existente is None:
                 nuevo = Empleado(
@@ -58,7 +66,7 @@ class EmpleadoFormView(ctk.CTkToplevel):
                     fecha_inicio_contrato=fecha,
                 )
                 empleado_repo.crear(nuevo)
-                accion(self.usuario_id, "CREAR_EMPLEADO", f"empleado_id={nuevo.id}")
+                accion(self.usuario_id, accion_log, f"empleado_id={nuevo.id}")
             else:
                 emp = self.empleado_existente
                 emp.nombre = self.entradas["nombre"].get()
@@ -69,17 +77,19 @@ class EmpleadoFormView(ctk.CTkToplevel):
                 emp.salario = salario
                 emp.fecha_inicio_contrato = fecha
                 empleado_repo.actualizar(emp)
-                accion(self.usuario_id, "ACTUALIZAR_EMPLEADO", f"empleado_id={emp.id}")
+                accion(self.usuario_id, accion_log, f"empleado_id={emp.id}")
 
         except (ValueError, TypeError) as e:
-            log_error(self.usuario_id, "CREAR_EMPLEADO" if self.empleado_existente is None
-                else "ACTUALIZAR_EMPLEADO", str(e))
+            log_error(self.usuario_id, accion_log, str(e))
             messagebox.showerror("Datos inválidos", str(e))
+            return
+        except (ConnectionError, ErrorBD) as e:
+            log_error(self.usuario_id, accion_log, str(e))
+            messagebox.showerror("Error de base de datos", f"No se pudo guardar el empleado.\n{e}")
             return
 
         self.on_guardado()
         self.destroy()
-
 
 class EmpleadosView(ctk.CTkFrame):
     def __init__(self, parent, app):
@@ -105,8 +115,14 @@ class EmpleadosView(ctk.CTkFrame):
         for widget in self.lista.winfo_children():
             widget.destroy()
 
+        try:
+            empleados = empleado_repo.listar_todos()
+        except (ConnectionError, ErrorBD) as e:
+            self._error_bd("LISTAR_EMPLEADOS", "No se pudo cargar la lista de empleados.", e)
+            return
+
         rol = self.app.usuario_actual.rol
-        for empleado in empleado_repo.listar_todos():
+        for empleado in empleados:
             fila = ctk.CTkFrame(self.lista)
             fila.pack(fill="x", pady=4)
 
@@ -135,10 +151,20 @@ class EmpleadosView(ctk.CTkFrame):
                         empleado_existente=empleado)
 
     def _desactivar(self, empleado: Empleado) -> None:
-        if messagebox.askyesno("Confirmar", f"¿Desactivar a {empleado.nombre}?"):
+        if not messagebox.askyesno("Confirmar", f"¿Desactivar a {empleado.nombre}?"):
+            return
+        try:
             empleado_repo.eliminar(empleado.id)
-            self._cargar_lista()
             accion(self.app.usuario_actual.id, "DESACTIVAR_EMPLEADO", f"empleado_id={empleado.id}")
+        except (ConnectionError, ErrorBD) as e:
+            self._error_bd("DESACTIVAR_EMPLEADO", f"No se pudo desactivar a {empleado.nombre}.", e)
+            return
+        self._cargar_lista()
+
+    def _error_bd(self, accion_log: str, mensaje: str, e: Exception) -> None:
+        """Registra el error en logs/errores.log y se lo muestra al usuario."""
+        log_error(self.app.usuario_actual.id, accion_log, str(e))
+        messagebox.showerror("Error de base de datos", f"{mensaje}\n{e}")
 
 
 def _dashboard():

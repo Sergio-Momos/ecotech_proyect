@@ -67,6 +67,13 @@ class Informe:
         self._formato = "pdf"
         return ruta
 
+    
+    @staticmethod
+    def _celda_segura(valor):
+        if isinstance(valor, str) and valor.startswith(("=", "+", "-", "@", "\t", "\r")):
+            return "'" + valor
+        return valor
+    
     def exportar_excel(self, ruta: str) -> str:
         if not self._contenido:
             raise ValueError("Debe generar el informe antes de exportarlo.")
@@ -75,7 +82,7 @@ class Informe:
         columnas = list(self._contenido[0].keys())
         hoja.append(columnas)
         for fila in self._contenido:
-            hoja.append([fila[c] for c in columnas])
+            hoja.append([self._celda_segura(fila[c]) for c in columnas])
         wb.save(ruta)
         self._formato = "excel"
         return ruta

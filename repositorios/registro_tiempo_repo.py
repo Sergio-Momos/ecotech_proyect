@@ -1,6 +1,7 @@
 from database.conexion import cursor_db
 from repositorios import empleado_repo, proyecto_repo
 from models.registro_tiempo import RegistroTiempo
+from datetime import date
 
 
 def _fila_a_registro(fila: dict) -> RegistroTiempo:
@@ -48,6 +49,39 @@ def listar_todos() -> list[RegistroTiempo]:
         cursor.execute("SELECT * FROM registros_tiempo")
         filas = cursor.fetchall()
     return [_fila_a_registro(fila) for fila in filas] if filas else []
+
+def listar(
+    empleado_id: int | None = None,
+    proyecto_id: int | None = None,
+    desde: date | None = None,
+    hasta: date | None = None,
+) -> list[RegistroTiempo]:
+    
+    condiciones = []
+    parametros = []
+
+    if empleado_id is not None:
+        condiciones.append("empleado_id = %s")
+        parametros.append(empleado_id)
+    if proyecto_id is not None:
+        condiciones.append("proyecto_id = %s")
+        parametros.append(proyecto_id)
+    if desde is not None:
+        condiciones.append("fecha >= %s")
+        parametros.append(desde)
+    if hasta is not None:
+        condiciones.append("fecha <= %s")
+        parametros.append(hasta)
+
+    sql = "SELECT * FROM registros_tiempo"
+    if condiciones:
+        sql += " WHERE " + " AND ".join(condiciones)
+    sql += " ORDER BY fecha DESC, id DESC"
+
+    with cursor_db(dictionary=True) as (cursor, _):
+        cursor.execute(sql, tuple(parametros))
+        filas = cursor.fetchall()
+    return [_fila_a_registro(fila) for fila in filas]
 
 def actualizar(registro: RegistroTiempo) -> None:
     with cursor_db() as (cursor, _):

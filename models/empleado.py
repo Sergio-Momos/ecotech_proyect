@@ -79,6 +79,22 @@ class Empleado(Persona):
 
 
     def registrar_horas(self, fecha: date, horas_trabajadas: float, descripcion: str, proyecto: "Proyecto") -> RegistroTiempo:
+
+        # Regla 1: no se pueden registrar horas antes del inicio del contrato
+        if fecha < self.fecha_inicio_contrato:
+            raise ValueError(
+                f"La fecha {fecha} es anterior al inicio de contrato "
+                f"({self.fecha_inicio_contrato})."
+            )
+
+        # Regla 2: solo se pueden registrar horas de los últimos 30 días
+        # (coincide con el ciclo mensual de pago de remuneraciones)
+        if (date.today() - fecha).days > 30:
+            raise ValueError(
+                "Solo se pueden registrar horas de los últimos 30 días. "
+                "Para fechas anteriores, solicita la corrección a RRHH."
+            )
+
         # No permitir más de un registro por empleado y día
         if any(
             registro.fecha == fecha
