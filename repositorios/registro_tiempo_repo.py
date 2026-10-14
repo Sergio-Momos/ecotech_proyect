@@ -1,4 +1,4 @@
-from database.conexion import cursor_db
+from database.conexion import cursor_db, perfil_activo
 from repositorios import empleado_repo, proyecto_repo
 from models.registro_tiempo import RegistroTiempo
 from datetime import date
@@ -19,6 +19,8 @@ def _fila_a_registro(fila: dict) -> RegistroTiempo:
 
 
 def crear(registro: RegistroTiempo) -> int:
+    if perfil_activo() == "ti":
+        raise PermissionError("El perfil TI no puede registrar horas.")
     with cursor_db() as (cursor, _):
         cursor.execute(
             """

@@ -2,6 +2,11 @@ import re
 
 from .constantes import PATRON_RUT
 
+def validar_nombre_o_apellido(valor: str, campo: str) -> str:
+    if not valor or not valor.isalpha():
+        raise ValueError(f"{campo} debe contener solo letras, sin espacios, números ni signos.")
+    return valor
+
 def validar_texto(valor: str, campo: str) -> str:
     if not isinstance(valor, str):
         raise TypeError(f"{campo} debe ser un texto.")
