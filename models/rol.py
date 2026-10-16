@@ -105,6 +105,11 @@ class Rol:
     def tiene_permiso(self, permiso: str) -> bool:
         """Indica si el rol permite ejecutar una acción específica."""
         permiso = validar_texto(permiso, self._CAMPO_PERMISO)
+        if self._perfil_bd == "ti" and permiso in {
+            self._CREAR_REGISTRO_PROPIO,
+            self._LEER_REGISTROS_PROPIOS,
+        }:
+            return False
         return permiso in self._valor_permisos
 
     @classmethod

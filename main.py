@@ -27,14 +27,15 @@ def sembrar_roles() -> dict:
         (Rol.empleado_estandar, "empleado"),
         (Rol.ti, "ti"),
     ]:
-        rol = rol_repo.buscar_por_nombre(factory()._nombre)
+        rol_base = factory()
+        rol = rol_repo.buscar_por_nombre(rol_base._nombre)
         if rol is None:
-            rol = factory()
+            rol = rol_base
             rol_repo.crear(rol)
             print(f"  Creado: {rol._nombre} (id: {rol._id})")
         else:
             # Resincronizar permisos por si cambiaron en el código
-            faltantes = factory()._permisos - rol._permisos
+            faltantes = rol_base._permisos - rol._permisos
             if faltantes:
                 for p in faltantes:
                     rol.agregar_permiso(p)
@@ -59,8 +60,8 @@ def sembrar_empleados(roles: dict) -> dict:
     creados = {}
     for nombre, dir, tel, correo, rut, salario, fecha, rol_clave in datos:
         existentes = empleado_repo.listar_todos(incluir_inactivos=True)
-        if any(e._nombre == nombre for e in existentes):
-            emp = next(e for e in existentes if e._nombre == nombre)
+        emp = next((e for e in existentes if e._nombre == nombre), None)
+        if emp is not None:
             print(f"  Ya existía: {nombre} (id: {emp._id})")
         else:
             emp = Empleado(

@@ -29,7 +29,7 @@ def listar_todos() -> list[Rol]:
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute("SELECT * FROM roles")
         filas = cursor.fetchall()
-    return [_fila_a_rol(fila) for fila in filas] if filas else []
+    return [_fila_a_rol(fila) for fila in filas]
 
 def buscar_por_nombre(nombre: str) -> Rol | None:
     with cursor_db(dictionary=True) as (cursor, _):

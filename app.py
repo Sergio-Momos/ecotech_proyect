@@ -23,10 +23,10 @@ class App(ctk.CTk):
         self.navegar_a(LoginView)
 
     def navegar_a(self, clase_frame) -> None:
-        if self._frame_actual is not None:
-            self._frame_actual.destroy()
         nuevo = clase_frame(self._contenedor, self)
         nuevo.pack(fill="both", expand=True)
+        if self._frame_actual is not None:
+            self._frame_actual.destroy()
         self._frame_actual = nuevo
 
     def iniciar_sesion_exitosa(self, usuario) -> None:

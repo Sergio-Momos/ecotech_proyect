@@ -41,7 +41,7 @@ def listar_todos() -> list[Usuario]:
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute("SELECT * FROM usuarios")
         filas = cursor.fetchall()
-    return [_fila_a_usuario(fila) for fila in filas] if filas else []
+    return [_fila_a_usuario(fila) for fila in filas]
 
 def generar_username_unico(nombre_completo: str) -> str:
     base = Usuario.generar_base_username(nombre_completo)

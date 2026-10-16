@@ -1,6 +1,6 @@
 from datetime import date
 from typing import TYPE_CHECKING
-from utils.validaciones import validar_texto
+from utils.validaciones import validar_texto, validar_horas
 
 if TYPE_CHECKING:
     from .empleado import Empleado
@@ -52,13 +52,7 @@ class RegistroTiempo:
 
     @_horas_trabajadas.setter
     def _horas_trabajadas(self, valor: float) -> None:
-        if not isinstance(valor, (int, float)) or isinstance(valor, bool):
-            raise TypeError("Las horas trabajadas deben ser un número (int o float)")
-        if valor <= 0:
-            raise ValueError("Las horas trabajadas deben ser mayores que 0")
-        if valor > 10:
-            raise ValueError("Un solo registro no puede superar las 10 horas diarias permitidas por ley")
-        self._valor_horas_trabajadas = float(valor)
+        self._valor_horas_trabajadas = validar_horas(valor)
 
     @property
     def _descripcion(self) -> str:

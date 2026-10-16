@@ -6,7 +6,9 @@ from tkinter import messagebox
 from models.empleado import Empleado
 from models.rol import Rol
 from repositorios import empleado_repo
+from gui.componentes import crear_encabezado, limpiar_contenedor
 from utils.auditoria import accion, error as log_error
+from utils.validaciones import validar_nombre_o_apellido
 from mysql.connector import Error as ErrorBD
 
 class EmpleadoFormView(ctk.CTkToplevel):
@@ -17,12 +19,18 @@ class EmpleadoFormView(ctk.CTkToplevel):
         self._on_guardado = on_guardado
         self._empleado_existente = empleado_existente
         self.title("Editar empleado" if empleado_existente else "Nuevo empleado")
-        self.geometry("380x680")
+        self.geometry("380x740" if empleado_existente is None else "380x680")
         self.grab_set()  # bloquea la ventana principal mientras esto está abierto
         self._usuario_id = usuario_id
 
-        etiquetas_y_atributos = [
-            ("Nombre", "nombre"), ("Dirección", "direccion"), ("Teléfono", "telefono"),
+        if empleado_existente is None:
+            etiquetas_y_atributos = [
+                ("Primer nombre", "nombre"), ("Primer apellido", "apellido"),
+            ]
+        else:
+            etiquetas_y_atributos = [("Nombre", "nombre")]
+        etiquetas_y_atributos += [
+            ("Dirección", "direccion"), ("Teléfono", "telefono"),
             ("Correo", "correo"), ("RUT", "rut"), ("Salario", "salario"),
         ]
         self._entradas = {}
@@ -45,6 +53,14 @@ class EmpleadoFormView(ctk.CTkToplevel):
     def _guardar(self) -> None:
         accion_log = "CREAR_EMPLEADO" if self._empleado_existente is None else "ACTUALIZAR_EMPLEADO"
         try:
+            nombre = self._entradas["nombre"].get()
+            if self._empleado_existente is None:
+                nombre = validar_nombre_o_apellido(nombre, "El primer nombre")
+                apellido = validar_nombre_o_apellido(
+                    self._entradas["apellido"].get(), "El primer apellido"
+                )
+                # El modelo y la base de datos guardan el nombre completo en un solo campo.
+                nombre = f"{nombre} {apellido}"
             try:
                 fecha = datetime.strptime(self._entrada_fecha.get(), "%Y-%m-%d").date()
             except ValueError:
@@ -57,7 +73,7 @@ class EmpleadoFormView(ctk.CTkToplevel):
             if self._empleado_existente is None:
                 nuevo = Empleado(
                     id=None,
-                    nombre=self._entradas["nombre"].get(),
+                    nombre=nombre,
                     direccion=self._entradas["direccion"].get(),
                     telefono=self._entradas["telefono"].get(),
                     correo=self._entradas["correo"].get(),
@@ -97,11 +113,7 @@ class EmpleadosView(ctk.CTkFrame):
         self._app = app
         rol = app._usuario_actual._rol
 
-        encabezado = ctk.CTkFrame(self, fg_color="transparent")
-        encabezado.pack(fill="x", padx=20, pady=15)
-        ctk.CTkButton(encabezado, text="← Volver", width=90,
-                    command=lambda: app.navegar_a(_dashboard())).pack(side="left")
-        ctk.CTkLabel(encabezado, text="Empleados", font=ctk.CTkFont(size=18, weight="bold")).pack(side="left", padx=20)
+        encabezado = crear_encabezado(self, app, "Empleados")
         if rol.tiene_permiso(Rol._CREAR_EMPLEADOS):
             ctk.CTkButton(encabezado, text="+ Nuevo empleado",
                         command=self._abrir_formulario_crear).pack(side="right")
@@ -112,8 +124,7 @@ class EmpleadosView(ctk.CTkFrame):
         self._cargar_lista()
 
     def _cargar_lista(self) -> None:
-        for widget in self._lista.winfo_children():
-            widget.destroy()
+        limpiar_contenedor(self._lista)
 
         try:
             empleados = empleado_repo.listar_todos()
@@ -165,8 +176,3 @@ class EmpleadosView(ctk.CTkFrame):
         """Registra el error en logs/errores.log y se lo muestra al usuario."""
         log_error(self._app._usuario_actual._id, accion_log, str(e))
         messagebox.showerror("Error de base de datos", f"{mensaje}\n{e}")
-
-
-def _dashboard():
-    from gui.dashboard_view import DashboardView
-    return DashboardView

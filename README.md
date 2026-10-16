@@ -1,3 +1,13 @@
+## Instalación
+
+Consulta el [manual de instalación de EcoTech Solutions](MANUAL_INSTALACION.md) para preparar el entorno, configurar MySQL e iniciar la aplicación.
+
+## Diagrama UML
+
+Consulta el [diagrama de clases](docs/uml/clases.png), la [organización del código](docs/uml/arquitectura.png) y la [versión editable en draw.io](docs/uml/ecotech_actualizado.drawio).
+
+---
+
 espero te sirva robar mi codigo
 
 Cosas a tener en cuenta:
