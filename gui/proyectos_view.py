@@ -5,6 +5,7 @@ from datetime import datetime
 from models.proyecto import Proyecto
 from models.rol import Rol
 from repositorios import proyecto_repo, empleado_repo
+from gui.componentes import crear_encabezado, limpiar_contenedor
 from utils.auditoria import accion, error as log_error
 
 
@@ -93,8 +94,7 @@ class NominaProyectoView(ctk.CTkToplevel):
         self._recargar()
 
     def _recargar(self) -> None:
-        for widget in self._lista.winfo_children():
-            widget.destroy()
+        limpiar_contenedor(self._lista)
 
         proyecto = proyecto_repo.buscar_por_id(self._proyecto_id)
         asignados_ids = {e._id for e in proyecto._empleados}
@@ -145,11 +145,7 @@ class ProyectosView(ctk.CTkFrame):
         self._mostrar_inactivos = False
         rol = app._usuario_actual._rol
 
-        encabezado = ctk.CTkFrame(self, fg_color="transparent")
-        encabezado.pack(fill="x", padx=20, pady=15)
-        ctk.CTkButton(encabezado, text="← Volver", width=90,
-                      command=lambda: app.navegar_a(_dashboard())).pack(side="left")
-        ctk.CTkLabel(encabezado, text="Proyectos", font=ctk.CTkFont(size=18, weight="bold")).pack(side="left", padx=20)
+        encabezado = crear_encabezado(self, app, "Proyectos")
         if rol.tiene_permiso(Rol._ASIGNAR_EMPLEADOS_PROYECTO):
             ctk.CTkButton(encabezado, text="+ Nuevo proyecto",
                           command=self._abrir_formulario_crear).pack(side="right")
@@ -169,8 +165,7 @@ class ProyectosView(ctk.CTkFrame):
         self._cargar_lista()
 
     def _cargar_lista(self) -> None:
-        for widget in self._lista.winfo_children():
-            widget.destroy()
+        limpiar_contenedor(self._lista)
 
         rol = self._app._usuario_actual._rol
         proyectos = proyecto_repo.listar_todos(incluir_inactivos=self._mostrar_inactivos)
@@ -222,8 +217,3 @@ class ProyectosView(ctk.CTkFrame):
         accion(self._app._usuario_actual._id, "ACTIVAR_PROYECTO",
                                     f"pryt_id={proyecto._id}")
         self._cargar_lista()
-
-
-def _dashboard():
-    from gui.dashboard_view import DashboardView
-    return DashboardView

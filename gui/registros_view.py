@@ -3,18 +3,22 @@ from tkinter import messagebox
 from datetime import timedelta, datetime
 
 from models.rol import Rol
+from models.registro_tiempo import RegistroTiempo
 from repositorios import empleado_repo, proyecto_repo, registro_tiempo_repo
+from utils.fechas import leer_fecha_opcional
+from gui.componentes import crear_encabezado, limpiar_contenedor
 from utils.auditoria import accion, registro_horas, error as log_error
 from mysql.connector import Error as ErrorBD
 
 
 class RegistroFormView(ctk.CTkToplevel):
 
-    def __init__(self, parent, *, on_guardado, registro, usuario_id: int):
+    def __init__(self, parent, *, on_guardado, registro, usuario):
         super().__init__(parent)
         self._on_guardado = on_guardado
         self._registro = registro
-        self._usuario_id = usuario_id
+        self._usuario = usuario
+        self._usuario_id = usuario._id
         self.title("Editar registro de horas")
         self.geometry("360x460")
         self.grab_set()
@@ -42,6 +46,8 @@ class RegistroFormView(ctk.CTkToplevel):
         self._selector_proyecto = ctk.CTkOptionMenu(
             self, values=list(self._mapa_proyectos.keys()), width=280
         )
+        self._mapa_proyectos.setdefault(registro._proyecto._nombre, registro._proyecto)
+        self._selector_proyecto.configure(values=list(self._mapa_proyectos))
         self._selector_proyecto.set(registro._proyecto._nombre)
         self._selector_proyecto.pack()
 
@@ -49,14 +55,18 @@ class RegistroFormView(ctk.CTkToplevel):
 
     def _guardar(self) -> None:
         try:
-            self._registro._fecha = datetime.strptime(self._entrada_fecha.get(), "%Y-%m-%d").date()
-            self._registro._horas_trabajadas = float(self._entrada_horas.get())
-            self._registro._descripcion = self._entrada_descripcion.get()
-            self._registro._proyecto = self._mapa_proyectos[self._selector_proyecto.get()]
-            registro_tiempo_repo.actualizar(self._registro)
+            nuevo = RegistroTiempo(
+                fecha=datetime.strptime(self._entrada_fecha.get(), "%Y-%m-%d").date(),
+                horas_trabajadas=float(self._entrada_horas.get()),
+                descripcion=self._entrada_descripcion.get(),
+                empleado=self._registro._empleado,
+                proyecto=self._mapa_proyectos[self._selector_proyecto.get()],
+            )
+            nuevo._id = self._registro._id
+            registro_tiempo_repo.actualizar(nuevo, usuario=self._usuario)
             accion(self._usuario_id, "ACTUALIZAR_REGISTRO",
                    f"registro_id={self._registro._id}, empleado_id={self._registro._empleado._id}")
-        except (ValueError, TypeError, KeyError) as e:
+        except (ValueError, TypeError, KeyError, PermissionError) as e:
             log_error(self._usuario_id, "ACTUALIZAR_REGISTRO", str(e))
             messagebox.showerror("Datos inválidos", str(e))
             return
@@ -70,11 +80,12 @@ class RegistroFormView(ctk.CTkToplevel):
 
 class CargaMasivaView(ctk.CTkToplevel):
 
-    def __init__(self, parent, *, empleado, on_guardado, usuario_id: int):
+    def __init__(self, parent, *, empleado, on_guardado, usuario):
         super().__init__(parent)
         self._empleado = empleado
         self._on_guardado = on_guardado
-        self._usuario_id = usuario_id
+        self._usuario = usuario
+        self._usuario_id = usuario._id
         self.title("Carga masiva de horas")
         self.geometry("580x620")
         self.grab_set()
@@ -137,8 +148,7 @@ class CargaMasivaView(ctk.CTkToplevel):
             self._error_bd("No se pudieron revisar los días ya registrados.", e)
             return
 
-        for widget in self._contenedor_filas.winfo_children():
-            widget.destroy()
+        limpiar_contenedor(self._contenedor_filas)
         self._filas = []
 
         dia = desde
@@ -170,12 +180,6 @@ class CargaMasivaView(ctk.CTkToplevel):
             messagebox.showerror("Nada que guardar", "Genera la tabla primero.")
             return
 
-        try:
-            registro_tiempo_repo.cargar_historial(self._empleado)
-        except (ConnectionError, ErrorBD) as e:
-            self._error_bd("No se pudo revisar tu historial de horas.", e)
-            return
-
         pendientes = []
         for dia, entry_horas, entry_descripcion, bloqueado in self._filas:
             if bloqueado:
@@ -185,8 +189,8 @@ class CargaMasivaView(ctk.CTkToplevel):
                 continue
             try:
                 horas = float(texto_horas)
-                registro = self._empleado.registrar_horas(
-                    dia, horas, entry_descripcion.get() or "Carga masiva", proyecto
+                registro = RegistroTiempo(
+                    dia, horas, entry_descripcion.get() or "Carga masiva", self._empleado, proyecto
                 )
             except (ValueError, TypeError) as e:
                 messagebox.showerror("Error en el lote", f"Día {dia.isoformat()}: {e}")
@@ -197,17 +201,20 @@ class CargaMasivaView(ctk.CTkToplevel):
             messagebox.showinfo("Nada que guardar", "No ingresaste horas en ninguna fila.")
             return
 
-        guardados = 0
         try:
-            for registro in pendientes:
-                registro_tiempo_repo.crear(registro)
-                registro_horas(self._usuario_id, self._empleado._id, proyecto._id,
-                               str(registro._fecha), registro._horas_trabajadas)
-                guardados += 1
-        except (ConnectionError, ErrorBD) as e:
-            self._error_bd(f"Se guardaron {guardados} de {len(pendientes)} registros antes del error.", e)
-            self._on_guardado()
+            registro_tiempo_repo.crear_lote(pendientes, usuario=self._usuario)
+        except (ValueError, TypeError, PermissionError) as e:
+            log_error(self._usuario_id, "CARGA_MASIVA", str(e))
+            messagebox.showerror("Error en el lote", str(e))
             return
+        except (ConnectionError, ErrorBD) as e:
+            self._error_bd("No se guardó ningún registro. Puedes reintentar la carga.", e)
+            return
+
+        for registro in pendientes:
+            self._empleado._agregar_registro_tiempo(registro)
+            registro_horas(self._usuario_id, self._empleado._id, proyecto._id,
+                           str(registro._fecha), registro._horas_trabajadas)
 
         messagebox.showinfo("Listo", f"Se guardaron {len(pendientes)} registros.")
         self._on_guardado()
@@ -223,12 +230,7 @@ class RegistrosView(ctk.CTkFrame):
         self._rol = app._usuario_actual._rol
         self._empleado_actual = empleado_repo.buscar_por_id(app._usuario_actual._id)
 
-        encabezado = ctk.CTkFrame(self, fg_color="transparent")
-        encabezado.pack(fill="x", padx=20, pady=15)
-        ctk.CTkButton(encabezado, text="← Volver", width=90,
-                      command=lambda: app.navegar_a(_dashboard())).pack(side="left")
-        ctk.CTkLabel(encabezado, text="Registro de horas",
-                     font=ctk.CTkFont(size=18, weight="bold")).pack(side="left", padx=20)
+        crear_encabezado(self, app, "Registro de horas")
 
         self._tabs = ctk.CTkTabview(self)
         self._tabs.pack(fill="both", expand=True, padx=20, pady=(0, 20))
@@ -243,8 +245,7 @@ class RegistrosView(ctk.CTkFrame):
         messagebox.showerror("Error de base de datos", f"{mensaje}\n{e}")
 
     def _mostrar(self, lista, registros, con_empleado: bool) -> None:
-        for widget in lista.winfo_children():
-            widget.destroy()
+        limpiar_contenedor(lista)
         if not registros:
             ctk.CTkLabel(lista, text="No hay registros.", text_color="gray").pack(pady=20)
             return
@@ -283,7 +284,7 @@ class RegistrosView(ctk.CTkFrame):
     def _abrir_carga_masiva(self) -> None:
         CargaMasivaView(self, empleado=self._empleado_actual,
                         on_guardado=self._cargar_mis_registros,
-                        usuario_id=self._app._usuario_actual._id)
+                        usuario=self._app._usuario_actual)
 
     def _construir_todos(self, contenedor) -> None:
         try:
@@ -313,19 +314,10 @@ class RegistrosView(ctk.CTkFrame):
         self._lista_todos.pack(fill="both", expand=True, pady=10)
         self._cargar_todos()
 
-    def _leer_fecha(self, entrada, nombre: str):
-        texto = entrada.get().strip()
-        if not texto:
-            return None
-        try:
-            return datetime.strptime(texto, "%Y-%m-%d").date()
-        except ValueError:
-            raise ValueError(f"La fecha '{nombre}' debe tener el formato AAAA-MM-DD.") from None
-
     def _cargar_todos(self) -> None:
         try:
-            desde = self._leer_fecha(self.filtro_desde, "Desde")
-            hasta = self._leer_fecha(self.filtro_hasta, "Hasta")
+            desde = leer_fecha_opcional(self.filtro_desde.get(), "Desde")
+            hasta = leer_fecha_opcional(self.filtro_hasta.get(), "Hasta")
             if desde and hasta and desde > hasta:
                 raise ValueError("'Desde' no puede ser posterior a 'Hasta'.")
         except ValueError as e:
@@ -352,21 +344,16 @@ class RegistrosView(ctk.CTkFrame):
 
     def _editar(self, registro) -> None:
         RegistroFormView(self, on_guardado=self._cargar_todos,
-                         registro=registro, usuario_id=self._app._usuario_actual._id)
+                         registro=registro, usuario=self._app._usuario_actual)
 
     def _eliminar(self, registro) -> None:
         if not messagebox.askyesno("Confirmar", f"¿Eliminar el registro del {registro._fecha}?"):
             return
         try:
-            registro_tiempo_repo.eliminar(registro._id)
+            registro_tiempo_repo.eliminar(registro._id, usuario=self._app._usuario_actual)
             accion(self._app._usuario_actual._id, "ELIMINAR_REGISTRO",
                    f"registro_id={registro._id}, empleado_id={registro._empleado._id}")
-        except (ConnectionError, ErrorBD) as e:
+        except (ConnectionError, ErrorBD, PermissionError) as e:
             self._error_bd("ELIMINAR_REGISTRO", "No se pudo eliminar el registro.", e)
             return
         self._cargar_todos()
-
-
-def _dashboard():
-    from gui.dashboard_view import DashboardView
-    return DashboardView

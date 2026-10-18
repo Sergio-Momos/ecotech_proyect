@@ -3,6 +3,7 @@ from tkinter import messagebox
 
 from models.rol import Rol
 from repositorios import empleado_repo, usuario_repo, rol_repo
+from gui.componentes import crear_encabezado, limpiar_contenedor
 from utils.auditoria import accion, error as log_error
 
 
@@ -165,12 +166,7 @@ class TiView(ctk.CTkFrame):
         super().__init__(parent)
         self._app = app
 
-        encabezado = ctk.CTkFrame(self, fg_color="transparent")
-        encabezado.pack(fill="x", padx=20, pady=15)
-        ctk.CTkButton(encabezado, text="← Volver", width=90,
-                      command=lambda: app.navegar_a(_dashboard())).pack(side="left")
-        ctk.CTkLabel(encabezado, text="Gestión de usuarios",
-                     font=ctk.CTkFont(size=18, weight="bold")).pack(side="left", padx=20)
+        crear_encabezado(self, app, "Gestión de usuarios")
 
         self._tabs = ctk.CTkTabview(self)
         self._tabs.pack(fill="both", expand=True, padx=20, pady=(0, 20))
@@ -192,8 +188,7 @@ class TiView(ctk.CTkFrame):
         self._cargar_sin_cuenta()
 
     def _cargar_sin_cuenta(self) -> None:
-        for widget in self._lista_sin_cuenta.winfo_children():
-            widget.destroy()
+        limpiar_contenedor(self._lista_sin_cuenta)
 
         todos = empleado_repo.listar_todos()
         sin_cuenta = [e for e in todos if usuario_repo.buscar_por_id(e._id) is None]
@@ -225,8 +220,7 @@ class TiView(ctk.CTkFrame):
             self._lista_inactivas = lista
 
     def _cargar_cuentas(self, lista, solo_activos: bool) -> None:
-        for widget in lista.winfo_children():
-            widget.destroy()
+        limpiar_contenedor(lista)
 
         usuarios = usuario_repo.listar_todos()
         filtrados = [u for u in usuarios
@@ -260,8 +254,3 @@ class TiView(ctk.CTkFrame):
         self._cargar_sin_cuenta()
         self._cargar_cuentas(self._lista_activas, solo_activos=True)
         self._cargar_cuentas(self._lista_inactivas, solo_activos=False)
-
-
-def _dashboard():
-    from gui.dashboard_view import DashboardView
-    return DashboardView

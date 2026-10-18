@@ -1,0 +1,481 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" agent="EcoTech UML" version="24.7.17">
+  <diagram name="1. Clases del dominio" id="clases-dominio">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2339" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;EcoTech Solutions | Diagrama de clases actual&lt;/b&gt;&lt;br&gt;Propiedades y operaciones principales de models/" style="text;html=1;fontSize=21;align=center;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="45.00" y="10.00" width="2050.00" height="55.00" as="geometry" />
+        </mxCell>
+        <mxCell id="Persona" value="&lt;div style=&quot;text-align:center;background-color:#e7f0f4;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;&lt;b&gt;Persona&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;# _id : int | None&lt;br&gt;# _nombre : str&lt;br&gt;# _direccion : str&lt;br&gt;# _telefono : str&lt;br&gt;# _correo : str&lt;br&gt;# _rut : str&lt;/div&gt;&lt;div style=&quot;padding:9px;&quot;&gt;+ get_nombre_completo() : str&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;overflow=fill;align=left;verticalAlign=top;spacing=0;fontSize=13;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="142.50" y="643.35" width="205.00" height="218.00" as="geometry" />
+        </mxCell>
+        <mxCell id="Empleado" value="&lt;div style=&quot;text-align:center;background-color:#e7f0f4;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;&lt;b&gt;Empleado&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;# _salario : float&lt;br&gt;# _fecha_inicio_contrato : date&lt;br&gt;# _proyectos : tuple[Proyecto, ...]&lt;br&gt;# _registros_tiempo : tuple[RegistroTiempo, ...]&lt;br&gt;# _usuario : Usuario | None&lt;br&gt;# _activo : bool&lt;/div&gt;&lt;div style=&quot;padding:9px;&quot;&gt;+ listar_proyectos() : tuple&lt;br&gt;+ registrar_horas(fecha: date, horas_trabajadas: float,&lt;br&gt;    descripcion: str, proyecto: Proyecto) : RegistroTiempo&lt;br&gt;+ crear_usuario(password: str, rol: Rol) : Usuario&lt;br&gt;+ activar() : None&lt;br&gt;+ desactivar() : None&lt;br&gt;# _agregar_proyecto(proyecto: Proyecto) : None&lt;br&gt;# _quitar_proyecto(proyecto: Proyecto) : None&lt;br&gt;# _agregar_registro_tiempo(registro: RegistroTiempo) : None&lt;br&gt;# _limpiar_registros_tiempo() : None&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;overflow=fill;align=left;verticalAlign=top;spacing=0;fontSize=13;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="748.00" y="558.97" width="394.00" height="386.75" as="geometry" />
+        </mxCell>
+        <mxCell id="Usuario" value="&lt;div style=&quot;text-align:center;background-color:#e7f0f4;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;&lt;b&gt;Usuario&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;# _id : int&lt;br&gt;# _username : str&lt;br&gt;# _password : str {solo escritura}&lt;br&gt;# _valor_password : str {hash}&lt;br&gt;# _rol : Rol&lt;br&gt;# _activo : bool&lt;/div&gt;&lt;div style=&quot;padding:9px;&quot;&gt;+ verificar_password(password: str) : bool&lt;br&gt;+ generar_base_username(nombre_completo: str) : str {clase}&lt;br&gt;+ reconstruir(id: int, username: str, password_hash: str,&lt;br&gt;    rol: Rol, activo: bool = True) : Usuario {clase}&lt;br&gt;+ activar() : None&lt;br&gt;+ desactivar() : None&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;overflow=fill;align=left;verticalAlign=top;spacing=0;fontSize=13;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="745.38" y="136.53" width="399.25" height="311.75" as="geometry" />
+        </mxCell>
+        <mxCell id="Rol" value="&lt;div style=&quot;text-align:center;background-color:#e7f0f4;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;&lt;b&gt;Rol&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;# _id : int | None&lt;br&gt;# _nombre : str&lt;br&gt;# _perfil_bd : str&lt;br&gt;# _permisos : frozenset[str]&lt;/div&gt;&lt;div style=&quot;padding:9px;&quot;&gt;+ agregar_permiso(permiso: str) : None&lt;br&gt;+ quitar_permiso(permiso: str) : None&lt;br&gt;+ tiene_permiso(permiso: str) : bool&lt;br&gt;+ recursos_humanos() : Rol {clase}&lt;br&gt;+ empleado_estandar() : Rol {clase}&lt;br&gt;+ ti() : Rol {clase}&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;overflow=fill;align=left;verticalAlign=top;spacing=0;fontSize=13;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1513.63" y="155.27" width="262.75" height="274.25" as="geometry" />
+        </mxCell>
+        <mxCell id="Seguridad" value="&lt;div style=&quot;text-align:center;background-color:#e7f0f4;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;&lt;b&gt;Seguridad&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;# _ITERACIONES : int = 100000&lt;br&gt;# _LARGO_SALT : int = 16&lt;/div&gt;&lt;div style=&quot;padding:9px;&quot;&gt;&lt;u&gt;+ hashear_password(password: str) : str&lt;/u&gt;&lt;br&gt;&lt;u&gt;+ verificar_password(password: str, hash_guardado: str) : bool&lt;/u&gt;&lt;br&gt;&lt;u&gt;+ hash_busqueda(dato: str) : str&lt;/u&gt;&lt;br&gt;&lt;u&gt;# _calcular_hash(password: str, salt: str) : str&lt;/u&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;overflow=fill;align=left;verticalAlign=top;spacing=0;fontSize=13;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="45.00" y="204.27" width="400.00" height="176.25" as="geometry" />
+        </mxCell>
+        <mxCell id="Departamento" value="&lt;div style=&quot;text-align:center;background-color:#e7f0f4;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;&lt;b&gt;Departamento&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;# _id : int | None&lt;br&gt;# _nombre : str&lt;br&gt;# _empleados : tuple[Empleado, ...]&lt;br&gt;# _gerente : Empleado&lt;/div&gt;&lt;div style=&quot;padding:9px;&quot;&gt;+ agregar_empleado(empleado: Empleado) : None&lt;br&gt;+ eliminar_empleado(empleado: Empleado) : None&lt;br&gt;+ buscar_empleado(id: int) : Empleado&lt;br&gt;+ reasignar_empleado(empleado: Empleado,&lt;br&gt;    destino: Departamento) : None&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;overflow=fill;align=left;verticalAlign=top;spacing=0;fontSize=13;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1478.75" y="624.60" width="332.50" height="255.50" as="geometry" />
+        </mxCell>
+        <mxCell id="Proyecto" value="&lt;div style=&quot;text-align:center;background-color:#e7f0f4;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;&lt;b&gt;Proyecto&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;# _id : int | None&lt;br&gt;# _nombre : str&lt;br&gt;# _descripcion : str&lt;br&gt;# _fecha_inicio : date&lt;br&gt;# _empleados : tuple[Empleado, ...]&lt;br&gt;# _activo : bool&lt;/div&gt;&lt;div style=&quot;padding:9px;&quot;&gt;+ asignar_empleado(empleado: Empleado) : None&lt;br&gt;+ quitar_empleado(empleado: Empleado) : None&lt;br&gt;+ activar() : None&lt;br&gt;+ desactivar() : None&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;overflow=fill;align=left;verticalAlign=top;spacing=0;fontSize=13;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="780.62" y="1075.22" width="328.75" height="274.25" as="geometry" />
+        </mxCell>
+        <mxCell id="RegistroTiempo" value="&lt;div style=&quot;text-align:center;background-color:#e7f0f4;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;&lt;b&gt;RegistroTiempo&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;# _id : int | None&lt;br&gt;# _fecha : date&lt;br&gt;# _horas_trabajadas : float&lt;br&gt;# _descripcion : str&lt;br&gt;# _empleado : Empleado&lt;br&gt;# _proyecto : Proyecto&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;overflow=fill;align=left;verticalAlign=top;spacing=0;fontSize=13;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="153.00" y="1122.73" width="184.00" height="179.25" as="geometry" />
+        </mxCell>
+        <mxCell id="Informe" value="&lt;div style=&quot;text-align:center;background-color:#e7f0f4;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;&lt;b&gt;Informe&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:9px;border-bottom:1px solid #29475a;&quot;&gt;# _tipo : str&lt;br&gt;# _fecha_generacion : date&lt;br&gt;# _formato : str | None&lt;br&gt;# _contenido : list[dict[str, Any]]&lt;/div&gt;&lt;div style=&quot;padding:9px;&quot;&gt;+ generar_informe(filas: list[dict[str, Any]]) : None&lt;br&gt;+ exportar_pdf(ruta: str) : str&lt;br&gt;+ exportar_excel(ruta: str) : str&lt;br&gt;&lt;u&gt;# _celda_segura(valor)&lt;/u&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;overflow=fill;align=left;verticalAlign=top;spacing=0;fontSize=13;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1484.75" y="1105.48" width="320.50" height="213.75" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_0" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=block;endFill=0;curved=1;" edge="1" parent="1" source="Empleado" target="Persona">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="622.58" y="749.35" />
+              <mxPoint x="464.24" y="749.35" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_1" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;curved=1;" edge="1" parent="1" source="Empleado" target="Usuario">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="945.00" y="520.18" />
+              <mxPoint x="945.00" y="479.52" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_1" value="cuenta {BD}" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="826.25" y="479.40" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="taillabel_1" value="1" style="text;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="934.72" y="528.42" width="40.00" height="20.00" as="geometry" />
+        </mxCell>
+        <mxCell id="headlabel_1" value="0..1" style="text;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="915.28" y="452.80" width="40.00" height="20.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_2" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;curved=1;" edge="1" parent="1" source="Usuario" target="Rol">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1262.70" y="289.35" />
+              <mxPoint x="1409.75" y="289.35" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_2" value="rol" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1241.90" y="268.70" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="taillabel_2" value="0..*" style="text;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1145.00" y="289.10" width="40.00" height="20.00" as="geometry" />
+        </mxCell>
+        <mxCell id="headlabel_2" value="1" style="text;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1472.90" y="269.60" width="40.00" height="20.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_3" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;dashed=1;endArrow=open;endFill=0;curved=1;" edge="1" parent="1" source="Usuario" target="Seguridad">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="655.32" y="289.35" />
+              <mxPoint x="548.19" y="289.35" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_3" value="usa" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="500.06" y="268.70" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_4" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;curved=1;" edge="1" parent="1" source="Departamento" target="Empleado">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1520.28" y="873.95" />
+              <mxPoint x="1495.32" y="874.76" />
+              <mxPoint x="1475.55" y="877.30" />
+              <mxPoint x="1323.05" y="896.92" />
+              <mxPoint x="1135.25" y="939.60" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_4" value="integrantes {BD}" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1194.90" y="880.22" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="taillabel_4" value="0..1" style="text;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1479.10" y="854.96" width="40.00" height="20.00" as="geometry" />
+        </mxCell>
+        <mxCell id="headlabel_4" value="0..*" style="text;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1137.70" y="934.52" width="40.00" height="20.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_5" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;curved=1;" edge="1" parent="1" source="Departamento" target="Empleado">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1520.28" y="624.75" />
+              <mxPoint x="1495.32" y="623.94" />
+              <mxPoint x="1475.55" y="621.40" />
+              <mxPoint x="1323.05" y="601.78" />
+              <mxPoint x="1135.25" y="559.10" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_5" value="gerente" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1219.70" y="577.23" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="taillabel_5" value="0..*" style="text;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1479.80" y="604.31" width="40.00" height="20.00" as="geometry" />
+        </mxCell>
+        <mxCell id="headlabel_5" value="1" style="text;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1133.50" y="563.15" width="40.00" height="20.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_6" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;curved=1;" edge="1" parent="1" source="Empleado" target="Proyecto">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="945.00" y="985.07" />
+              <mxPoint x="945.00" y="1032.86" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_6" value="participa" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="834.88" y="987.95" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="taillabel_6" value="0..*" style="text;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="915.28" y="950.28" width="40.00" height="20.00" as="geometry" />
+        </mxCell>
+        <mxCell id="headlabel_6" value="0..*" style="text;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="934.72" y="1044.49" width="40.00" height="20.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_7" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;curved=1;" edge="1" parent="1" source="RegistroTiempo" target="Empleado">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="440.92" y="1080.61" />
+              <mxPoint x="613.48" y="967.20" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_7" value="registro de empleado" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="385.29" y="1000.75" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="taillabel_7" value="0..*" style="text;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="339.63" y="1135.65" width="40.00" height="20.00" as="geometry" />
+        </mxCell>
+        <mxCell id="headlabel_7" value="1" style="text;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="705.51" y="871.96" width="40.00" height="20.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_8" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;curved=1;" edge="1" parent="1" source="RegistroTiempo" target="Proyecto">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="449.54" y="1209.35" />
+              <mxPoint x="642.56" y="1209.35" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_8" value="registro de proyecto" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="407.26" y="1188.72" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="taillabel_8" value="0..*" style="text;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="337.72" y="1209.07" width="40.00" height="20.00" as="geometry" />
+        </mxCell>
+        <mxCell id="headlabel_8" value="1" style="text;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="740.09" y="1189.63" width="40.00" height="20.00" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="# = miembro con guion bajo por convención Python · Subrayado = estático · {clase} = classmethod · {BD} = relación respaldada por el esquema SQL&lt;br&gt;Se omiten constructores y accesores. Informe recibe filas; no mantiene referencias a entidades. Consulte UML_ACTUALIZADO.md para las salvedades." style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=13;fontColor=#29475A;fillColor=#F4F8FA;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="45.00" y="1561.60" width="2050.00" height="55.00" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="2. Organización del código" id="arquitectura-codigo">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2339" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;EcoTech Solutions | Organización del código&lt;/b&gt;&lt;br&gt;Clases y módulos existentes; dependencias principales" style="text;html=1;align=center;fontSize=21;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="45.00" y="0.00" width="1400.00" height="65.00" as="geometry" />
+        </mxCell>
+        <mxCell id="App" value="«clase» App : CTk&lt;br&gt;app.py&lt;br&gt;_usuario_actual : Usuario | None&lt;br&gt;navegar_a(clase_frame)&lt;br&gt;iniciar_sesion_exitosa(usuario)&lt;br&gt;cerrar_sesion()" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=13;spacing=9;fillColor=#F4F8FA;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="182.66" y="139.50" width="232.68" height="135.54" as="geometry" />
+        </mxCell>
+        <mxCell id="Vistas" value="«clases» gui/&lt;br&gt;LoginView · DashboardView&lt;br&gt;EmpleadosView · DepartamentosView&lt;br&gt;ProyectosView · RegistrosView&lt;br&gt;TiView · InformesView&lt;br&gt;Formularios auxiliares" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=13;spacing=9;fillColor=#E7F0F4;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="149.04" y="352.79" width="261.93" height="135.54" as="geometry" />
+        </mxCell>
+        <mxCell id="Modelos" value="«paquete» models/&lt;br&gt;Persona · Empleado · Usuario · Rol&lt;br&gt;Departamento · Proyecto · RegistroTiempo&lt;br&gt;Informe · Seguridad" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=13;spacing=9;fillColor=#EAF3E9;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="411.66" y="751.24" width="292.68" height="98.04" as="geometry" />
+        </mxCell>
+        <mxCell id="Repositorios" value="«módulos» repositorios/&lt;br&gt;empleado_repo · usuario_repo · rol_repo&lt;br&gt;departamento_repo · proyecto_repo&lt;br&gt;registro_tiempo_repo" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=13;spacing=9;fillColor=#FFF4DF;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="825.66" y="566.08" width="280.68" height="98.04" as="geometry" />
+        </mxCell>
+        <mxCell id="Conexion" value="«módulo» database.conexion&lt;br&gt;cursor_db() · obtener_conexion()&lt;br&gt;establecer_perfil_activo()&lt;br&gt;limpiar_perfil_activo()&lt;br&gt;perfil_activo() · probar_conexion()" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=13;spacing=9;fillColor=#F4F8FA;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1147.66" y="741.86" width="232.68" height="116.79" as="geometry" />
+        </mxCell>
+        <mxCell id="Config" value="«módulo» config&lt;br&gt;DB_PROFILES · AES_KEY&lt;br&gt;Lee variables de .env" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=13;spacing=9;fillColor=#F4F8FA;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="865.66" y="951.27" width="178.68" height="79.29" as="geometry" />
+        </mxCell>
+        <mxCell id="BD" value="«base de datos» MySQL&lt;br&gt;ecotech_rrhh&lt;br&gt;Tablas y funciones AES_ENCRYPT / AES_DECRYPT" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=13;spacing=9;fillColor=#FFF4DF;strokeColor=#29475A;shape=cylinder;" vertex="1" parent="1">
+          <mxGeometry x="1098.91" y="936.41" width="330.18" height="109.02" as="geometry" />
+        </mxCell>
+        <mxCell id="Utilidades" value="«módulos» utils/&lt;br&gt;validaciones · constantes · fechas&lt;br&gt;auditoria" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=13;spacing=9;fillColor=#F4F8FA;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="83.91" y="951.27" width="234.18" height="79.29" as="geometry" />
+        </mxCell>
+        <mxCell id="Exportacion" value="«bibliotecas»&lt;br&gt;openpyxl: archivos Excel&lt;br&gt;reportlab: archivos PDF" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=13;spacing=9;fillColor=#F4F8FA;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="468.28" y="951.27" width="179.43" height="79.29" as="geometry" />
+        </mxCell>
+        <mxCell id="Main" value="«módulo» main.py&lt;br&gt;Carga de datos iniciales" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=13;spacing=9;fillColor=#F4F8FA;strokeColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="877.79" y="390.29" width="176.43" height="60.54" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_0" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="App" target="Vistas">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="225.83" y="292.43" />
+              <mxPoint x="214.00" y="306.04" />
+              <mxPoint x="214.00" y="306.04" />
+              <mxPoint x="214.00" y="306.04" />
+              <mxPoint x="214.00" y="321.79" />
+              <mxPoint x="214.00" y="321.79" />
+              <mxPoint x="214.00" y="321.79" />
+              <mxPoint x="219.95" y="330.60" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_0" value="crea y cambia vistas" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="180.00" y="301.91" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_1" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="Vistas" target="App">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="317.88" y="335.39" />
+              <mxPoint x="324.00" y="321.79" />
+              <mxPoint x="324.00" y="321.79" />
+              <mxPoint x="324.00" y="321.79" />
+              <mxPoint x="324.00" y="306.04" />
+              <mxPoint x="324.00" y="306.04" />
+              <mxPoint x="324.00" y="306.04" />
+              <mxPoint x="321.92" y="297.90" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_1" value="solicitan navegación y sesión" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="313.25" y="301.91" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_2" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="App" target="Modelos">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="453.11" y="289.27" />
+              <mxPoint x="485.00" y="306.04" />
+              <mxPoint x="485.00" y="306.04" />
+              <mxPoint x="485.00" y="306.04" />
+              <mxPoint x="528.00" y="566.08" />
+              <mxPoint x="528.00" y="566.08" />
+              <mxPoint x="528.00" y="566.08" />
+              <mxPoint x="541.46" y="670.67" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_2" value="mantiene Usuario actual" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="500.54" y="515.20" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_3" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="App" target="Conexion">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="633.37" y="270.22" />
+              <mxPoint x="1079.00" y="352.79" />
+              <mxPoint x="1079.00" y="352.79" />
+              <mxPoint x="1079.00" y="352.79" />
+              <mxPoint x="1283.00" y="566.08" />
+              <mxPoint x="1283.00" y="566.08" />
+              <mxPoint x="1283.00" y="566.08" />
+              <mxPoint x="1283.00" y="664.12" />
+              <mxPoint x="1283.00" y="664.12" />
+              <mxPoint x="1283.00" y="664.12" />
+              <mxPoint x="1278.38" y="696.97" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_3" value="selecciona / limpia perfil" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1229.60" y="515.20" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_4" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="App" target="Utilidades">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="171.95" y="313.19" />
+              <mxPoint x="124.00" y="352.79" />
+              <mxPoint x="124.00" y="352.79" />
+              <mxPoint x="124.00" y="352.79" />
+              <mxPoint x="45.00" y="419.56" />
+              <mxPoint x="45.00" y="419.56" />
+              <mxPoint x="45.00" y="419.56" />
+              <mxPoint x="45.00" y="419.56" />
+              <mxPoint x="45.00" y="801.26" />
+              <mxPoint x="45.00" y="801.26" />
+              <mxPoint x="115.26" y="886.23" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_4" value="audita acciones" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="-0.25" y="603.10" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_5" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="Vistas" target="Modelos">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="333.73" y="560.58" />
+              <mxPoint x="373.75" y="664.12" />
+              <mxPoint x="373.75" y="664.12" />
+              <mxPoint x="373.75" y="664.12" />
+              <mxPoint x="431.94" y="706.80" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_5" value="validan y construyen objetos" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="361.88" y="603.10" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_6" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="Vistas" target="Repositorios">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="369.56" y="513.15" />
+              <mxPoint x="391.00" y="535.08" />
+              <mxPoint x="391.00" y="535.08" />
+              <mxPoint x="391.00" y="535.08" />
+              <mxPoint x="788.00" y="566.08" />
+              <mxPoint x="788.00" y="566.08" />
+              <mxPoint x="788.00" y="566.08" />
+              <mxPoint x="798.42" y="568.89" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_6" value="consultan y guardan" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="358.50" y="515.20" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_7" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="Vistas" target="Utilidades">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="254.63" y="604.11" />
+              <mxPoint x="222.18" y="837.50" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_7" value="fechas y auditoría" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="201.79" y="690.99" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_8" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="Repositorios" target="Modelos">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="801.99" y="689.73" />
+              <mxPoint x="733.47" y="720.49" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_8" value="reconstruyen objetos" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="755.80" y="690.99" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_9" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="Repositorios" target="Conexion">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1079.85" y="687.91" />
+              <mxPoint x="1116.25" y="710.87" />
+              <mxPoint x="1116.25" y="710.87" />
+              <mxPoint x="1116.25" y="710.87" />
+              <mxPoint x="1134.35" y="721.70" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_9" value="cursor_db" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1057.10" y="690.99" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_10" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="Repositorios" target="Config">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="962.48" y="735.60" />
+              <mxPoint x="958.61" y="867.28" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_10" value="empleado_repo usa AES_KEY" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="951.00" y="788.26" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_11" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="Conexion" target="Config">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1123.93" y="886.78" />
+              <mxPoint x="1070.59" y="919.34" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_11" value="elige DB_PROFILES" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1082.90" y="885.53" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_12" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="Conexion" target="BD">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1264.00" y="879.90" />
+              <mxPoint x="1264.00" y="903.43" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_12" value="mysql.connector / SQL" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1236.80" y="885.53" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_13" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="Modelos" target="Utilidades">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="410.52" y="879.20" />
+              <mxPoint x="339.37" y="916.80" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_13" value="validaciones y constantes" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="370.08" y="885.53" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_14" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="Modelos" target="Exportacion">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="558.00" y="876.99" />
+              <mxPoint x="558.00" y="911.65" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_14" value="solo Informe" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="506.38" y="885.53" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_15" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="Main" target="Repositorios">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="966.00" y="478.61" />
+              <mxPoint x="966.00" y="520.11" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_15" value="siembra datos" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="917.75" y="515.20" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_16" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="Main" target="Modelos">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="838.08" y="493.63" />
+              <mxPoint x="709.50" y="566.08" />
+              <mxPoint x="709.50" y="566.08" />
+              <mxPoint x="709.50" y="566.08" />
+              <mxPoint x="640.42" y="672.41" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_16" value="construye objetos" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="670.25" y="603.10" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_17" value="" style="endArrow=none;html=1;rounded=1;strokeColor=#526779;fontFamily=Helvetica;fontSize=12;endArrow=classic;curved=1;" edge="1" parent="1" source="Main" target="Conexion">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1048.06" y="493.43" />
+              <mxPoint x="1131.00" y="566.08" />
+              <mxPoint x="1131.00" y="566.08" />
+              <mxPoint x="1131.00" y="566.08" />
+              <mxPoint x="1186.18" y="662.82" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label_17" value="activa perfil rrhh" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=#ffffff;strokeColor=none;fontSize=12;fontColor=#29475A;" vertex="1" parent="1">
+          <mxGeometry x="1143.80" y="603.10" width="170.00" height="24.00" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

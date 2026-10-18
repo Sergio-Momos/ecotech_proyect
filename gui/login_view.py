@@ -3,6 +3,7 @@ from tkinter import messagebox
 
 from repositorios import usuario_repo
 from utils.auditoria import error as log_error
+from mysql.connector import Error as ErrorBD
 
 class LoginView(ctk.CTkFrame):
     def __init__(self, parent, app):
@@ -60,8 +61,13 @@ class LoginView(ctk.CTkFrame):
         self._entry_password.focus_set()
 
     def _intentar_login(self) -> None:
-        username = self._entry_usuario.get()
-        usuario = usuario_repo.buscar_por_username_activo(username)
+        username = self._entry_usuario.get().strip()
+        try:
+            usuario = usuario_repo.buscar_por_username_activo(username)
+        except (ConnectionError, ErrorBD) as e:
+            log_error(0, "LOGIN", str(e))
+            messagebox.showerror("Error de conexión", "No se pudo consultar el usuario. Inténtalo nuevamente.")
+            return
         if usuario is None or not usuario.verificar_password(self._entry_password.get()):
             log_error(0, "LOGIN", f"intento fallido: {username}")
             messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
@@ -71,11 +77,7 @@ class LoginView(ctk.CTkFrame):
             self._btn_mostrar_password.configure(text="Mostrar contraseña")
             self._entry_password.focus_set()
             return
-        self._app.iniciar_sesion_exitosa(usuario)
-
         try:
             self._app.iniciar_sesion_exitosa(usuario)
         except ValueError as e:
             messagebox.showerror("Error de configuración", str(e))
-
-        self._app.iniciar_sesion_exitosa(usuario)

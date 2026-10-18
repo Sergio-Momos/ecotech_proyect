@@ -17,5 +17,6 @@ config.py
 .DS_Store
 subir_cambios.sh
 logs/
-tests/
 MEJORAS_GESTION_HORAS.md
+MANUAL_INSTALACION.docx
+UML_ACTUALIZADO.md

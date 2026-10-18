@@ -6,6 +6,7 @@ from tkinter import messagebox
 from models.empleado import Empleado
 from models.rol import Rol
 from repositorios import empleado_repo
+from gui.componentes import crear_encabezado, limpiar_contenedor
 from utils.auditoria import accion, error as log_error
 from utils.validaciones import validar_nombre_o_apellido
 from mysql.connector import Error as ErrorBD
@@ -112,11 +113,7 @@ class EmpleadosView(ctk.CTkFrame):
         self._app = app
         rol = app._usuario_actual._rol
 
-        encabezado = ctk.CTkFrame(self, fg_color="transparent")
-        encabezado.pack(fill="x", padx=20, pady=15)
-        ctk.CTkButton(encabezado, text="← Volver", width=90,
-                    command=lambda: app.navegar_a(_dashboard())).pack(side="left")
-        ctk.CTkLabel(encabezado, text="Empleados", font=ctk.CTkFont(size=18, weight="bold")).pack(side="left", padx=20)
+        encabezado = crear_encabezado(self, app, "Empleados")
         if rol.tiene_permiso(Rol._CREAR_EMPLEADOS):
             ctk.CTkButton(encabezado, text="+ Nuevo empleado",
                         command=self._abrir_formulario_crear).pack(side="right")
@@ -127,8 +124,7 @@ class EmpleadosView(ctk.CTkFrame):
         self._cargar_lista()
 
     def _cargar_lista(self) -> None:
-        for widget in self._lista.winfo_children():
-            widget.destroy()
+        limpiar_contenedor(self._lista)
 
         try:
             empleados = empleado_repo.listar_todos()
@@ -180,8 +176,3 @@ class EmpleadosView(ctk.CTkFrame):
         """Registra el error en logs/errores.log y se lo muestra al usuario."""
         log_error(self._app._usuario_actual._id, accion_log, str(e))
         messagebox.showerror("Error de base de datos", f"{mensaje}\n{e}")
-
-
-def _dashboard():
-    from gui.dashboard_view import DashboardView
-    return DashboardView

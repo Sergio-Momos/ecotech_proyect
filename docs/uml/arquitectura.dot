@@ -1,0 +1,33 @@
+digraph Arquitectura {
+graph [rankdir=TB, splines=polyline, nodesep=0.7, ranksep=0.85, pad=0.4, bgcolor="white", fontname="DejaVu Sans", fontsize=22, labelloc=t, label="EcoTech Solutions | Organización del código\nClases y módulos existentes; dependencias principales"];
+node [shape=box, style="rounded,filled", fillcolor="#F4F8FA", color="#29475A", fontname="DejaVu Sans", fontsize=13, margin="0.22,0.16"];
+edge [color="#526779", fontname="DejaVu Sans", fontsize=11];
+App [label="«clase» App : CTk\napp.py\n_usuario_actual : Usuario | None\nnavegar_a(clase_frame)\niniciar_sesion_exitosa(usuario)\ncerrar_sesion()"];
+Vistas [label="«clases» gui/\nLoginView · DashboardView\nEmpleadosView · DepartamentosView\nProyectosView · RegistrosView\nTiView · InformesView\nFormularios auxiliares", fillcolor="#E7F0F4"];
+Modelos [label="«paquete» models/\nPersona · Empleado · Usuario · Rol\nDepartamento · Proyecto · RegistroTiempo\nInforme · Seguridad", fillcolor="#EAF3E9"];
+Repositorios [label="«módulos» repositorios/\nempleado_repo · usuario_repo · rol_repo\ndepartamento_repo · proyecto_repo\nregistro_tiempo_repo", fillcolor="#FFF4DF"];
+Conexion [label="«módulo» database.conexion\ncursor_db() · obtener_conexion()\nestablecer_perfil_activo()\nlimpiar_perfil_activo()\nperfil_activo() · probar_conexion()"];
+Config [label="«módulo» config\nDB_PROFILES · AES_KEY\nLee variables de .env"];
+BD [label="«base de datos» MySQL\necotech_rrhh\nTablas y funciones AES_ENCRYPT / AES_DECRYPT", shape=cylinder, fillcolor="#FFF4DF"];
+Utilidades [label="«módulos» utils/\nvalidaciones · constantes · fechas\nauditoria"];
+Exportacion [label="«bibliotecas»\nopenpyxl: archivos Excel\nreportlab: archivos PDF"];
+Main [label="«módulo» main.py\nCarga de datos iniciales"];
+App -> Vistas [label="crea y cambia vistas"];
+Vistas -> App [label="solicitan navegación y sesión", constraint=false];
+App -> Modelos [label="mantiene Usuario actual"];
+App -> Conexion [label="selecciona / limpia perfil"];
+App -> Utilidades [label="audita acciones"];
+Vistas -> Modelos [label="validan y construyen objetos"];
+Vistas -> Repositorios [label="consultan y guardan"];
+Vistas -> Utilidades [label="fechas y auditoría"];
+Repositorios -> Modelos [label="reconstruyen objetos"];
+Repositorios -> Conexion [label="cursor_db"];
+Repositorios -> Config [label="empleado_repo usa AES_KEY"];
+Conexion -> Config [label="elige DB_PROFILES"];
+Conexion -> BD [label="mysql.connector / SQL"];
+Modelos -> Utilidades [label="validaciones y constantes"];
+Modelos -> Exportacion [label="solo Informe"];
+Main -> Repositorios [label="siembra datos"];
+Main -> Modelos [label="construye objetos"];
+Main -> Conexion [label="activa perfil rrhh"];
+}

@@ -34,7 +34,7 @@ def listar_todos() -> list[Departamento]:
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute("SELECT * FROM departamentos")
         filas = cursor.fetchall()
-    return [_fila_a_departamento(fila) for fila in filas] if filas else []
+    return [_fila_a_departamento(fila) for fila in filas]
 
 def actualizar(departamento: Departamento) -> None:
     with cursor_db() as (cursor, _):

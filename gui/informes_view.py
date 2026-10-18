@@ -1,11 +1,13 @@
 import customtkinter as ctk
 from tkinter import messagebox, filedialog
-from datetime import datetime, date
+from datetime import date
 
 from mysql.connector import Error as ErrorBD
 
 from models.informe import Informe
 from repositorios import empleado_repo, departamento_repo, proyecto_repo, registro_tiempo_repo
+from utils.fechas import leer_fecha_opcional
+from gui.componentes import crear_encabezado
 from utils.auditoria import accion, error as log_error
 
 
@@ -22,12 +24,7 @@ class InformesView(ctk.CTkFrame):
         super().__init__(parent)
         self._app = app
 
-        encabezado = ctk.CTkFrame(self, fg_color="transparent")
-        encabezado.pack(fill="x", padx=20, pady=15)
-        ctk.CTkButton(encabezado, text="← Volver", width=90,
-                      command=lambda: app.navegar_a(_dashboard())).pack(side="left")
-        ctk.CTkLabel(encabezado, text="Informes",
-                     font=ctk.CTkFont(size=18, weight="bold")).pack(side="left", padx=20)
+        crear_encabezado(self, app, "Informes")
 
         cuerpo = ctk.CTkFrame(self, fg_color="transparent")
         cuerpo.pack(pady=20)
@@ -47,15 +44,6 @@ class InformesView(ctk.CTkFrame):
         for formato, (nombre, _) in self.FORMATOS.items():
             ctk.CTkButton(cuerpo, text=f"Descargar {nombre}", width=300,
                           command=lambda f=formato: self._exportar(f)).pack(pady=5)
-
-    def _leer_fecha(self, entrada, nombre: str):
-        texto = entrada.get().strip()
-        if not texto:
-            return None
-        try:
-            return datetime.strptime(texto, "%Y-%m-%d").date()
-        except ValueError:
-            raise ValueError(f"La fecha '{nombre}' debe tener el formato AAAA-MM-DD.") from None
 
     def _filas(self, tipo: str, desde, hasta) -> list[dict]:
         if tipo == Informe._TIPO_EMPLEADOS:
@@ -81,8 +69,8 @@ class InformesView(ctk.CTkFrame):
         usuario_id = self._app._usuario_actual._id
 
         try:
-            desde = self._leer_fecha(self._entrada_desde, "Desde")
-            hasta = self._leer_fecha(self._entrada_hasta, "Hasta")
+            desde = leer_fecha_opcional(self._entrada_desde.get(), "Desde")
+            hasta = leer_fecha_opcional(self._entrada_hasta.get(), "Hasta")
             if desde and hasta and desde > hasta:
                 raise ValueError("'Desde' no puede ser posterior a 'Hasta'.")
             informe = Informe(tipo)
@@ -113,8 +101,3 @@ class InformesView(ctk.CTkFrame):
 
         accion(usuario_id, "GENERAR_INFORME", f"tipo={tipo}, formato={formato}")
         messagebox.showinfo("Informe listo", f"Se guardó en:\n{ruta}")
-
-
-def _dashboard():
-    from gui.dashboard_view import DashboardView
-    return DashboardView
