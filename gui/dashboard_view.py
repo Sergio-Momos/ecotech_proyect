@@ -68,3 +68,4 @@ class DashboardView(ctk.CTkFrame):
             "EcoTech Solutions",
             "Esta sección todavía no está construida.",
         )
+

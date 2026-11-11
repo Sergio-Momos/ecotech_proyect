@@ -2,6 +2,7 @@
 from database.conexion import cursor_db
 from repositorios import empleado_repo
 from models.proyecto import Proyecto
+from utils.validaciones import validar_fecha_inicio_proyecto
 
 def _fila_a_proyecto(fila: dict) -> Proyecto:
     proyecto = Proyecto(
@@ -16,6 +17,7 @@ def _fila_a_proyecto(fila: dict) -> Proyecto:
     return proyecto
 
 def crear(proyecto: Proyecto) -> int:
+    validar_fecha_inicio_proyecto(proyecto._fecha_inicio)
     with cursor_db() as (cursor, _):
         cursor.execute(
             """
@@ -45,6 +47,13 @@ def listar_todos(incluir_inactivos: bool = False) -> list[Proyecto]:
 
 def actualizar(proyecto: Proyecto) -> None:
     with cursor_db() as (cursor, _):
+        cursor.execute("SELECT fecha_inicio FROM proyectos WHERE id = %s", (proyecto._id,))
+        fila = cursor.fetchone()
+        if fila is None:
+            raise ValueError("El proyecto ya no existe.")
+        fecha_anterior = fila["fecha_inicio"] if isinstance(fila, dict) else fila[0]
+        if proyecto._fecha_inicio != fecha_anterior:
+            validar_fecha_inicio_proyecto(proyecto._fecha_inicio)
         cursor.execute(
             "UPDATE proyectos SET nombre = %s, descripcion = %s, fecha_inicio = %s WHERE id = %s",
             (

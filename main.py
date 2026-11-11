@@ -61,6 +61,10 @@ def sembrar_empleados(roles: dict) -> dict:
     for nombre, dir, tel, correo, rut, salario, fecha, rol_clave in datos:
         existentes = empleado_repo.listar_todos(incluir_inactivos=True)
         emp = next((e for e in existentes if e._nombre == nombre), None)
+        if emp is None:
+            # La lista de empleados oculta las cuentas TI; buscar por RUT
+            # evita intentar insertar de nuevo a Soporte TI al repetir la siembra.
+            emp = empleado_repo.buscar_por_rut(rut)
         if emp is not None:
             print(f"  Ya existía: {nombre} (id: {emp._id})")
         else:
@@ -123,7 +127,7 @@ def sembrar_proyecto(empleados_roles: dict) -> None:
     proyecto = Proyecto(
         id=None, nombre="PanelesSolares",
         descripcion="Instalacion de paneles solares en oficina central",
-        fecha_inicio=date(2024, 1, 10),
+        fecha_inicio=date.today(),
     )
     proyecto_repo.crear(proyecto)
     for nombre in ("Ana Torres", "Camila Rios"):

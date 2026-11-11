@@ -7,6 +7,7 @@ from models.rol import Rol
 from repositorios import proyecto_repo, empleado_repo
 from gui.componentes import crear_encabezado, limpiar_contenedor
 from utils.auditoria import accion, error as log_error
+from utils.validaciones import validar_fecha_inicio_proyecto
 
 
 class ProyectoFormView(ctk.CTkToplevel):
@@ -44,6 +45,9 @@ class ProyectoFormView(ctk.CTkToplevel):
     def _guardar(self) -> None:
         try:
             fecha = datetime.strptime(self._entrada_fecha.get(), "%Y-%m-%d").date()
+            if (self._proyecto_existente is None
+                    or fecha != self._proyecto_existente._fecha_inicio):
+                validar_fecha_inicio_proyecto(fecha)
 
             if self._proyecto_existente is None:
                 nuevo = Proyecto(

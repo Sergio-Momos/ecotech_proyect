@@ -4,7 +4,7 @@ from .persona import Persona
 from .registro_tiempo import RegistroTiempo
 
 from .usuario import Usuario
-from utils.validaciones import validar_historial_horas
+from utils.validaciones import validar_fecha_registro, validar_historial_horas
 
 if TYPE_CHECKING:
     from .proyecto import Proyecto
@@ -32,6 +32,7 @@ class Empleado(Persona):
         self._valor_proyectos = []  # lista de proyectos a los que pertenece el empleado
         self._valor_registros_tiempo = []  # lista de registros de tiempo del empleado
         self._valor_usuario = None
+        self._valor_departamento = None
         self._activo = activo
 
     @property
@@ -78,23 +79,24 @@ class Empleado(Persona):
     def _registros_tiempo(self) -> tuple:
         return tuple(self._valor_registros_tiempo)
 
+    @property
+    def _departamento(self):
+        return self._valor_departamento
+
+    def _asignar_departamento(self, departamento) -> None:
+        self._valor_departamento = departamento
+
+    def _quitar_departamento(self, departamento) -> None:
+        if self._valor_departamento is not None and self._valor_departamento._id == departamento._id:
+            self._valor_departamento = None
+
 
     def registrar_horas(self, fecha: date, horas_trabajadas: float, descripcion: str, proyecto: "Proyecto") -> RegistroTiempo:
 
-        # Regla 1: no se pueden registrar horas antes del inicio del contrato
-        if fecha < self._fecha_inicio_contrato:
-            raise ValueError(
-                f"La fecha {fecha} es anterior al inicio de contrato "
-                f"({self._fecha_inicio_contrato})."
-            )
-
-        # Regla 2: solo se pueden registrar horas de los últimos 30 días
-        # (coincide con el ciclo mensual de pago de remuneraciones)
-        if (date.today() - fecha).days > 30:
-            raise ValueError(
-                "Solo se pueden registrar horas de los últimos 30 días. "
-                "Para fechas anteriores, solicita la corrección a RRHH."
-            )
+        from .proyecto import Proyecto
+        if not isinstance(proyecto, Proyecto):
+            raise TypeError("El proyecto debe ser un objeto Proyecto válido.")
+        validar_fecha_registro(fecha, self._fecha_inicio_contrato, proyecto._fecha_inicio)
 
         validar_historial_horas(
             fecha, horas_trabajadas,

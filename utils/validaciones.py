@@ -1,8 +1,33 @@
 import re
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from .constantes import PATRON_RUT
+
+
+def validar_fecha_inicio_proyecto(fecha: date) -> date:
+    """Un proyecto nuevo o reprogramado no puede comenzar en el pasado."""
+    if type(fecha) is not date:
+        raise TypeError("La fecha de inicio debe ser una instancia de date")
+    if fecha < date.today():
+        raise ValueError("La fecha de inicio del proyecto no puede ser anterior a hoy.")
+    return fecha
+
+
+def validar_fecha_registro(fecha: date, fecha_contrato: date, fecha_proyecto: date) -> date:
+    """Valida una fecha de trabajo frente al periodo permitido y sus relaciones."""
+    if type(fecha) is not date:
+        raise TypeError("La fecha del registro debe ser una instancia de date")
+    hoy = date.today()
+    if fecha > hoy:
+        raise ValueError("No se pueden registrar horas en una fecha futura.")
+    if fecha < hoy - timedelta(days=30):
+        raise ValueError("Solo se pueden registrar horas de los últimos 30 días.")
+    if fecha < fecha_contrato:
+        raise ValueError("No se pueden registrar horas anteriores al inicio del contrato.")
+    if fecha < fecha_proyecto:
+        raise ValueError("No se pueden registrar horas anteriores al inicio del proyecto.")
+    return fecha
 
 def validar_nombre_o_apellido(valor: str, campo: str) -> str:
     if not valor or not valor.isalpha():

@@ -94,8 +94,6 @@ class NominaDepartamentoView(ctk.CTkToplevel):
         limpiar_contenedor(self._lista)
 
         depto = departamento_repo.buscar_por_id(self._departamento_id)
-        asignados_ids = {e._id for e in depto._empleados}
-
         for empleado in depto._empleados:
             fila = ctk.CTkFrame(self._lista)
             fila.pack(fill="x", pady=3)
@@ -105,8 +103,10 @@ class NominaDepartamentoView(ctk.CTkToplevel):
                 command=lambda e=empleado: self._quitar(e),
             ).pack(side="right", padx=6)
 
-        candidatos = [e for e in empleado_repo.listar_todos() if e._id not in asignados_ids]
-        self._mapa_candidatos = {e._nombre: e for e in candidatos}
+        candidatos = empleado_repo.listar_sin_departamento()
+        self._mapa_candidatos = {
+            f"{e._nombre} (RUT {e._rut})": e for e in candidatos
+        }
         valores = list(self._mapa_candidatos.keys()) or ["(sin candidatos)"]
         self._selector_nuevo.configure(values=valores)
         self._selector_nuevo.set(valores[0])
@@ -116,7 +116,13 @@ class NominaDepartamentoView(ctk.CTkToplevel):
         if seleccion not in self._mapa_candidatos:
             return
         empleado = self._mapa_candidatos[seleccion]
-        departamento_repo.asignar_empleado(self._departamento_id, empleado._id)
+        try:
+            departamento_repo.asignar_empleado(self._departamento_id, empleado._id)
+        except (ValueError, TypeError) as e:
+            log_error(self._usuario_id, "ASIGNAR_EMPLEADO_DPTO", str(e))
+            messagebox.showerror("No se pudo asignar", str(e))
+            self._recargar()
+            return
         accion(self._usuario_id, "ASIGNAR_EMPLEADO_DPTO",
             f"dpto_id={self._departamento_id}, empleado_id={empleado._id}")
         self._recargar()

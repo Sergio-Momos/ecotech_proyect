@@ -78,6 +78,18 @@ def buscar_por_id(id_empleado: int) -> Empleado | None:
     return _fila_a_empleado(fila) if fila else None
 
 
+def buscar_por_rut(rut: str) -> Empleado | None:
+    """Busca por el hash del RUT, incluso si el empleado tiene perfil TI."""
+    rut_hash = Seguridad.hash_busqueda(rut)
+    with cursor_db(dictionary=True) as (cursor, _):
+        cursor.execute(
+            _select_cifrado("WHERE rut_hash = %s"),
+            (AES_KEY, AES_KEY, AES_KEY, AES_KEY, AES_KEY, rut_hash),
+        )
+        fila = cursor.fetchone()
+    return _fila_a_empleado(fila) if fila else None
+
+
 def listar_todos(incluir_inactivos: bool = False) -> list[Empleado]:
     with cursor_db(dictionary=True) as (cursor, _):
         if incluir_inactivos:
@@ -110,6 +122,17 @@ def listar_por_departamento(departamento_id: int) -> list[Empleado]:
         cursor.execute(
             _select_cifrado("WHERE departamento_id = %s"),
             (AES_KEY, AES_KEY, AES_KEY, AES_KEY, AES_KEY, departamento_id),
+        )
+        filas = cursor.fetchall()
+    return [_fila_a_empleado(fila) for fila in filas]
+
+
+def listar_sin_departamento() -> list[Empleado]:
+    """Lista empleados activos disponibles para una asignación departamental."""
+    with cursor_db(dictionary=True) as (cursor, _):
+        cursor.execute(
+            _select_cifrado("WHERE activo = TRUE AND departamento_id IS NULL"),
+            (AES_KEY, AES_KEY, AES_KEY, AES_KEY, AES_KEY),
         )
         filas = cursor.fetchall()
     return [_fila_a_empleado(fila) for fila in filas]

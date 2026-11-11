@@ -3,7 +3,7 @@ from repositorios import empleado_repo, proyecto_repo
 from models.registro_tiempo import RegistroTiempo
 from datetime import date
 from models.rol import Rol
-from utils.validaciones import validar_historial_horas, validar_id
+from utils.validaciones import validar_fecha_registro, validar_historial_horas, validar_id
 
 
 def _fila_a_registro(fila: dict) -> RegistroTiempo:
@@ -25,16 +25,22 @@ def _validar_usuario(usuario) -> None:
         raise PermissionError("Se requiere un usuario activo.")
 
 
-def _bloquear_empleados(cursor, usuario_id: int, empleado_id: int) -> None:
+def _bloquear_empleados(cursor, usuario_id: int, empleado_id: int) -> date:
     # Todas las escrituras del historial toman estos bloqueos en el mismo orden.
     # El bloqueo del empleado serializa incluso dos inserciones en un día vacío.
     for id_empleado in sorted({usuario_id, empleado_id}):
-        cursor.execute("SELECT id, activo FROM empleados WHERE id = %s FOR UPDATE", (id_empleado,))
+        cursor.execute(
+            "SELECT id, activo, fecha_inicio_contrato FROM empleados WHERE id = %s FOR UPDATE",
+            (id_empleado,),
+        )
         fila = cursor.fetchone()
         if fila is None:
             raise ValueError("El empleado no existe.")
         if id_empleado == usuario_id and not fila["activo"]:
             raise PermissionError("El empleado asociado a la sesión está inactivo.")
+        if id_empleado == empleado_id:
+            fecha_contrato = fila["fecha_inicio_contrato"]
+    return fecha_contrato
 
 
 def _historial(cursor, empleado_id: int) -> list[dict]:
@@ -45,14 +51,21 @@ def _historial(cursor, empleado_id: int) -> list[dict]:
     return list(cursor.fetchall())
 
 
-def _validar_proyecto(cursor, registro, proyecto_anterior=None) -> None:
+def _validar_proyecto(cursor, registro, proyecto_anterior=None, fecha_contrato=None) -> None:
     validar_id(registro._proyecto._id, "El id del proyecto")
     cursor.execute(
-        "SELECT id FROM proyectos WHERE id = %s AND (activo = TRUE OR id = %s)",
+        "SELECT id, fecha_inicio FROM proyectos WHERE id = %s AND (activo = TRUE OR id = %s)",
         (registro._proyecto._id, proyecto_anterior),
     )
-    if cursor.fetchone() is None:
+    proyecto = cursor.fetchone()
+    if proyecto is None:
         raise ValueError("El proyecto seleccionado no existe o está inactivo.")
+    fecha_inicio = proyecto["fecha_inicio"] if isinstance(proyecto, dict) else proyecto[1]
+    validar_fecha_registro(
+        registro._fecha,
+        fecha_contrato or registro._empleado._fecha_inicio_contrato,
+        fecha_inicio,
+    )
 
 
 def _insertar(cursor, registro) -> int:
@@ -85,10 +98,10 @@ def crear_lote(registros: list[RegistroTiempo], *, usuario) -> list[int]:
     if perfil_activo() == "ti" or not usuario._rol.tiene_permiso(Rol._CREAR_REGISTRO_PROPIO):
         raise PermissionError("No tienes permiso para registrar horas.")
     for registro in registros:
-        if (date.today() - registro._fecha).days > 30:
-            raise ValueError("Solo se pueden registrar horas de los últimos 30 días.")
-        if registro._fecha < registro._empleado._fecha_inicio_contrato:
-            raise ValueError("No se pueden registrar horas anteriores al inicio del contrato.")
+        validar_fecha_registro(
+            registro._fecha, registro._empleado._fecha_inicio_contrato,
+            registro._proyecto._fecha_inicio,
+        )
         if registro._empleado._id != usuario._id:
             raise PermissionError("Solo puedes registrar tus propias horas.")
         if registro._id is not None:
@@ -97,10 +110,10 @@ def crear_lote(registros: list[RegistroTiempo], *, usuario) -> list[int]:
         return []
     ids = []
     with cursor_db(dictionary=True) as (cursor, _):
-        _bloquear_empleados(cursor, usuario._id, usuario._id)
+        fecha_contrato = _bloquear_empleados(cursor, usuario._id, usuario._id)
         historial = _historial(cursor, usuario._id)
         for registro in registros:
-            _validar_proyecto(cursor, registro)
+            _validar_proyecto(cursor, registro, fecha_contrato=fecha_contrato)
             validar_historial_horas(
                 registro._fecha, registro._horas_trabajadas,
                 ((r["fecha"], r["horas_trabajadas"]) for r in historial),
@@ -163,12 +176,18 @@ def actualizar(registro: RegistroTiempo, *, usuario) -> None:
         raise PermissionError("No tienes permiso para editar este registro.")
     validar_id(registro._id, "El id del registro")
     with cursor_db(dictionary=True) as (cursor, _):
-        _bloquear_empleados(cursor, usuario._id, registro._empleado._id)
+        fecha_contrato = _bloquear_empleados(cursor, usuario._id, registro._empleado._id)
         historial = _historial(cursor, registro._empleado._id)
         previo = next((r for r in historial if r["id"] == registro._id), None)
         if previo is None:
             raise ValueError("El registro ya no existe o pertenece a otro empleado.")
-        _validar_proyecto(cursor, registro, previo["proyecto_id"])
+        validar_fecha_registro(
+            registro._fecha, registro._empleado._fecha_inicio_contrato,
+            registro._proyecto._fecha_inicio,
+        )
+        _validar_proyecto(
+            cursor, registro, previo["proyecto_id"], fecha_contrato=fecha_contrato,
+        )
         validar_historial_horas(
             registro._fecha, registro._horas_trabajadas,
             ((r["fecha"], r["horas_trabajadas"]) for r in historial if r["id"] != registro._id),

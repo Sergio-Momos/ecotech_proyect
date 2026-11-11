@@ -52,7 +52,10 @@ class Departamento:
             raise TypeError("El empleado debe ser una instancia de la clase Empleado.")
         if any(e._id == empleado._id for e in self._valor_empleados):
             raise ValueError(f"El empleado con id {empleado._id} ya pertenece a este departamento.")
+        if empleado._departamento is not None and empleado._departamento._id != self._id:
+            raise ValueError(f"El empleado con id {empleado._id} ya pertenece a otro departamento.")
         self._valor_empleados.append(empleado)
+        empleado._asignar_departamento(self)
 
     def eliminar_empleado(self, empleado: Empleado) -> None:
         if not isinstance(empleado, Empleado):
@@ -61,6 +64,7 @@ class Departamento:
         for e in self._valor_empleados:
             if e._id == empleado._id:
                 self._valor_empleados.remove(e)
+                e._quitar_departamento(self)
                 return  # Termina la ejecución tras eliminarlo
                     
             # Si el ciclo termina sin encontrarlo:
@@ -78,5 +82,10 @@ class Departamento:
             raise TypeError("El destino debe ser una instancia de la clase Departamento.")
                 
     # Reutilizamos la lógica ya creada
-        self.eliminar_empleado(empleado)
-        destino.agregar_empleado(empleado)
+        if not any(e._id == empleado._id for e in self._valor_empleados):
+            raise ValueError(f"El empleado con id {empleado._id} no pertenece a este departamento.")
+        if any(e._id == empleado._id for e in destino._valor_empleados):
+            raise ValueError(f"El empleado con id {empleado._id} ya pertenece al departamento de destino.")
+        self._valor_empleados = [e for e in self._valor_empleados if e._id != empleado._id]
+        destino._valor_empleados.append(empleado)
+        empleado._asignar_departamento(destino)

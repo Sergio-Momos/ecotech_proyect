@@ -82,7 +82,7 @@ La ruta debe apuntar al entorno recién creado. Mantenga ese entorno activo para
 La copia revisada no incluye `requirements.txt`. Instale los paquetes que importa el código:
 
 ```bash
-python -m pip install customtkinter mysql-connector-python python-dotenv openpyxl reportlab
+python -m pip install customtkinter mysql-connector-python python-dotenv openpyxl reportlab argon2-cffi
 ```
 
 | Paquete | Uso en el proyecto |
@@ -92,6 +92,7 @@ python -m pip install customtkinter mysql-connector-python python-dotenv openpyx
 | `python-dotenv` | Lectura de la configuración desde `.env`. |
 | `openpyxl` | Exportación de informes a Excel. |
 | `reportlab` | Exportación de informes a PDF. |
+| `argon2-cffi` | Hash seguro de contraseñas con Argon2id. |
 
 Tkinter pertenece a la instalación de Python y no se instala con el comando anterior. Compruébelo con:
 
@@ -104,7 +105,7 @@ Debe abrirse una ventana de prueba; ciérrela para continuar. Si falta Tkinter o
 Verifique los demás módulos:
 
 ```bash
-python -c "import customtkinter, mysql.connector, dotenv, openpyxl, reportlab; print('Dependencias disponibles')"
+python -c "import customtkinter, mysql.connector, dotenv, openpyxl, reportlab, argon2; print('Dependencias disponibles')"
 ```
 
 **Sobre el cifrado:** aunque el README anterior menciona Fernet y `cryptography`, el código actual cifra los campos de empleados mediante funciones AES de MySQL. No importa `cryptography`; ese paquete no es necesario para esta instalación.
@@ -237,7 +238,7 @@ Solo para una instalación nueva, genere una clave local:
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-Copie el resultado en `FERNET_KEY`. El nombre de la variable se conserva por compatibilidad con `config.py`; su valor se entrega a MySQL como clave AES. **Si usa una base existente, necesita su clave original: no genere una nueva para esa base.** Conserve un respaldo de la clave junto con los respaldos de la base, con acceso restringido.
+Copie el resultado en `FERNET_KEY`. Esta misma clave se usa para cifrar los datos de empleados y para producir los HMAC deterministas empleados en la búsqueda y validación de unicidad del RUT. Conserve un respaldo de la clave con acceso restringido: al perderla, los datos cifrados y los RUT guardados ya no podrán procesarse correctamente.
 
 ### 8.2. Comprobar o crear `config.py`
 
@@ -318,7 +319,7 @@ Espere el mensaje **«Siembra completada»**. La consola muestra los nombres de 
 
 Los nombres pueden llevar un sufijo si existen colisiones; utilice los que indique la consola. Las cuentas ya existentes se conservan y sus contraseñas no se restablecen al repetir la carga.
 
-La carga realiza varias operaciones independientes: un fallo puede dejar datos parciales. Además, la búsqueda de empleados excluye cuentas con rol TI, por lo que repetirla después de crear Soporte TI puede provocar un error de RUT duplicado. Si falla, revise lo creado antes de volver a ejecutarla; no vacíe las tablas como paso de recuperación automático.
+La carga realiza varias operaciones independientes: un fallo puede dejar datos parciales. Si falla, revise lo creado antes de volver a ejecutarla; no vacíe las tablas como paso de recuperación automático. Al repetirla, `main.py` comprueba también el RUT para reconocer empleados que no aparecen en la lista habitual, como Soporte TI.
 
 Para confirmar el resultado en MySQL:
 
@@ -373,7 +374,7 @@ Para las siguientes ejecuciones, abra una terminal en el proyecto, active el ent
 | Error de datos al cargar empleados o salario | Compruebe que `FERNET_KEY` es la clave original de esa base y que los valores cifrados se conservaron correctamente. |
 | El inicio de sesión funciona pero un módulo falla | Pruebe el perfil MySQL del rol y revise sus permisos sobre las tablas utilizadas. |
 | Usuario o contraseña incorrectos | Revise la salida de `main.py`; la cuenta debe estar activa. Repetir la carga no cambia una contraseña existente. |
-| Error de RUT duplicado al repetir `main.py` | Revise los datos parciales y el caso de Soporte TI descrito en el apartado 10. |
+| Error de RUT duplicado al repetir `main.py` | Revise si hay una carga parcial con datos distintos a los valores base; la siembra reconoce los empleados base por nombre y RUT. |
 | No puede escribir registros o exportaciones | Compruebe los permisos de escritura en `logs/` y en la carpeta de destino del informe. |
 
 Para diagnosticar un fallo, conserve el mensaje de la terminal y consulte `logs/errores.log` si se generó. No comparta contraseñas ni la clave de cifrado al pedir soporte.
