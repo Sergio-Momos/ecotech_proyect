@@ -97,8 +97,6 @@ def validar_id(valor: int, campo: str = "El id") -> None:
         raise TypeError(f"{campo} debe ser un número entero.")
     if valor <= 0:
         raise ValueError(f"{campo} debe ser mayor que cero.")
-
-
 def validar_horas(valor: float) -> float:
     """Valida las horas con la misma precisión que DECIMAL(4,2) en MySQL."""
     if not isinstance(valor, (int, float)) or isinstance(valor, bool):
