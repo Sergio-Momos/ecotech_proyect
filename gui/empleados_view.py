@@ -9,6 +9,7 @@ from repositorios import empleado_repo
 from utils.auditoria import accion, error as log_error
 from mysql.connector import Error as ErrorBD
 
+
 class EmpleadoFormView(ctk.CTkToplevel):
     """Formulario modal para crear o editar un Empleado."""
 
@@ -17,13 +18,13 @@ class EmpleadoFormView(ctk.CTkToplevel):
         self.on_guardado = on_guardado
         self.empleado_existente = empleado_existente
         self.title("Editar empleado" if empleado_existente else "Nuevo empleado")
-        self.geometry("380x680")
-        self.grab_set()  # bloquea la ventana principal mientras esto está abierto
+        self.geometry("380x740")
+        self.grab_set()
         self.usuario_id = usuario_id
 
         etiquetas_y_atributos = [
-            ("Nombre", "nombre"), ("Dirección", "direccion"), ("Teléfono", "telefono"),
-            ("Correo", "correo"), ("RUT", "rut"), ("Salario", "salario"),
+            ("Nombre", "nombre"), ("Apellido", "apellido"), ("Dirección", "direccion"),
+            ("Teléfono", "telefono"), ("Correo", "correo"), ("RUT", "rut"), ("Salario", "salario"),
         ]
         self.entradas = {}
         for etiqueta, atributo in etiquetas_y_atributos:
@@ -58,6 +59,7 @@ class EmpleadoFormView(ctk.CTkToplevel):
                 nuevo = Empleado(
                     id=None,
                     nombre=self.entradas["nombre"].get(),
+                    apellido=self.entradas["apellido"].get(),
                     direccion=self.entradas["direccion"].get(),
                     telefono=self.entradas["telefono"].get(),
                     correo=self.entradas["correo"].get(),
@@ -70,6 +72,7 @@ class EmpleadoFormView(ctk.CTkToplevel):
             else:
                 emp = self.empleado_existente
                 emp.nombre = self.entradas["nombre"].get()
+                emp.apellido = self.entradas["apellido"].get()
                 emp.direccion = self.entradas["direccion"].get()
                 emp.telefono = self.entradas["telefono"].get()
                 emp.correo = self.entradas["correo"].get()
@@ -90,6 +93,7 @@ class EmpleadoFormView(ctk.CTkToplevel):
 
         self.on_guardado()
         self.destroy()
+
 
 class EmpleadosView(ctk.CTkFrame):
     def __init__(self, parent, app):
@@ -126,7 +130,7 @@ class EmpleadosView(ctk.CTkFrame):
             fila = ctk.CTkFrame(self.lista)
             fila.pack(fill="x", pady=4)
 
-            texto = f"{empleado.nombre}  ·  RUT {empleado.rut}  ·  ${empleado.salario:,.0f}"
+            texto = f"{empleado.get_nombre_completo()}  ·  RUT {empleado.rut}  ·  ${empleado.salario:,.0f}"
             ctk.CTkLabel(fila, text=texto).pack(side="left", padx=10, pady=8)
 
             if rol.tiene_permiso(Rol.ELIMINAR_EMPLEADOS):
@@ -151,18 +155,17 @@ class EmpleadosView(ctk.CTkFrame):
                         empleado_existente=empleado)
 
     def _desactivar(self, empleado: Empleado) -> None:
-        if not messagebox.askyesno("Confirmar", f"¿Desactivar a {empleado.nombre}?"):
+        if not messagebox.askyesno("Confirmar", f"¿Desactivar a {empleado.get_nombre_completo()}?"):
             return
         try:
             empleado_repo.eliminar(empleado.id)
             accion(self.app.usuario_actual.id, "DESACTIVAR_EMPLEADO", f"empleado_id={empleado.id}")
         except (ConnectionError, ErrorBD) as e:
-            self._error_bd("DESACTIVAR_EMPLEADO", f"No se pudo desactivar a {empleado.nombre}.", e)
+            self._error_bd("DESACTIVAR_EMPLEADO", f"No se pudo desactivar a {empleado.get_nombre_completo()}.", e)
             return
         self._cargar_lista()
 
     def _error_bd(self, accion_log: str, mensaje: str, e: Exception) -> None:
-        """Registra el error en logs/errores.log y se lo muestra al usuario."""
         log_error(self.app.usuario_actual.id, accion_log, str(e))
         messagebox.showerror("Error de base de datos", f"{mensaje}\n{e}")
 

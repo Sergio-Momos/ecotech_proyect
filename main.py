@@ -11,7 +11,7 @@ Requisitos previos:
 """
 
 from datetime import date
-from database.conexion import establecer_perfil_activo
+from database.conexion import establecer_perfil_activo, perfil_activo
 from models.empleado import Empleado
 from models.rol import Rol
 from models.departamento import Departamento
@@ -49,28 +49,29 @@ def sembrar_roles() -> dict:
 def sembrar_empleados(roles: dict) -> dict:
     print("\n--- Empleados base ---")
     datos = [
-        ("Admin Principal",  "Oficina Central 1",  "900000001", "admin@ecotech.cl",      "21.456.789-K", 900000, date(2024, 1, 1),  "rrhh"),
-        ("Soporte TI",       "Oficina Central 2",  "900000002", "ti@ecotech.cl",          "20.333.444-3", 800000, date(2024, 1, 1),  "ti"),
-        ("Ana Torres",       "Los Alerces 123",    "912345678", "ana.torres@ecotech.cl",  "11.111.111-1", 650000, date(2023, 3, 1),  "empleado"),
-        ("Juan Perez",       "Neptuno 097",        "987654321", "juan.perez@ecotech.cl",  "22.222.222-2", 580000, date(2024, 6, 15), "empleado"),
-        ("Camila Rios",      "Av. Siempre Viva 742","933333333","camila.rios@ecotech.cl", "18.765.432-7", 725450, date(2024, 4, 20), "empleado"),
+        ("Admin",   "Principal", "Oficina Central 1",    "900000001", "admin@ecotech.cl",       "21.456.789-K", 900000, date(2024, 1, 1),  "rrhh"),
+        ("Soporte", "TI",        "Oficina Central 2",    "900000002", "ti@ecotech.cl",          "20.333.444-3", 800000, date(2024, 1, 1),  "ti"),
+        ("Ana",     "Torres",    "Los Alerces 123",      "912345678", "ana.torres@ecotech.cl",  "11.111.111-1", 650000, date(2023, 3, 1),  "empleado"),
+        ("Juan",    "Perez",     "Neptuno 097",          "987654321", "juan.perez@ecotech.cl",  "22.222.222-2", 580000, date(2024, 6, 15), "empleado"),
+        ("Camila",  "Rios",      "Av. Siempre Viva 742", "933333333", "camila.rios@ecotech.cl", "18.765.432-7", 725450, date(2024, 4, 20), "empleado"),
     ]
 
     creados = {}
-    for nombre, dir, tel, correo, rut, salario, fecha, rol_clave in datos:
+    for nombre, apellido, dir, tel, correo, rut, salario, fecha, rol_clave in datos:
+        completo = f"{nombre} {apellido}"
         existentes = empleado_repo.listar_todos(incluir_inactivos=True)
-        if any(e.nombre == nombre for e in existentes):
-            emp = next(e for e in existentes if e.nombre == nombre)
-            print(f"  Ya existía: {nombre} (id: {emp.id})")
+        emp = next((e for e in existentes if e.get_nombre_completo() == completo), None)
+        if emp is not None:
+            print(f"  Ya existía: {completo} (id: {emp.id})")
         else:
             emp = Empleado(
-                id=None, nombre=nombre, direccion=dir, telefono=tel,
+                id=None, nombre=nombre, apellido=apellido, direccion=dir, telefono=tel,
                 correo=correo, rut=rut, salario=salario,
                 fecha_inicio_contrato=fecha,
             )
             empleado_repo.crear(emp)
-            print(f"  Creado: {nombre} (id: {emp.id})")
-        creados[nombre] = (emp, rol_clave)
+            print(f"  Creado: {completo} (id: {emp.id})")
+        creados[completo] = (emp, rol_clave)
     return creados
 
 

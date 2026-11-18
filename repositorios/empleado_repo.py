@@ -9,6 +9,7 @@ def _fila_a_empleado(fila: dict) -> Empleado:
     return Empleado(
         id=fila["id"],
         nombre=fila["nombre"],
+        apellido=fila["apellido"],
         direccion=fila["direccion"],
         telefono=fila["telefono"],
         correo=fila["correo"],
@@ -22,7 +23,7 @@ def _fila_a_empleado(fila: dict) -> Empleado:
 def _select_cifrado(where: str) -> str:
     """Construye el SELECT con AES_DECRYPT y CAST para todas las columnas cifradas."""
     return f"""
-        SELECT id, nombre,
+        SELECT id, nombre, apellido,
             CAST(AES_DECRYPT(direccion, %s) AS CHAR) AS direccion,
             CAST(AES_DECRYPT(telefono,  %s) AS CHAR) AS telefono,
             CAST(AES_DECRYPT(correo,    %s) AS CHAR) AS correo,
@@ -46,14 +47,15 @@ def crear(empleado: Empleado) -> int:
         cursor.execute(
             """
             INSERT INTO empleados
-                (nombre, direccion, telefono, correo, rut, rut_hash, salario, fecha_inicio_contrato)
-            VALUES (%s,
+                (nombre, apellido, direccion, telefono, correo, rut, rut_hash, salario, fecha_inicio_contrato)
+            VALUES (%s, %s,
                     AES_ENCRYPT(%s, %s), AES_ENCRYPT(%s, %s),
                     AES_ENCRYPT(%s, %s), AES_ENCRYPT(%s, %s),
                     %s, AES_ENCRYPT(%s, %s), %s)
             """,
             (
                 empleado.nombre,
+                empleado.apellido,
                 empleado.direccion, AES_KEY,
                 empleado.telefono,  AES_KEY,
                 empleado.correo,    AES_KEY,
@@ -144,6 +146,7 @@ def actualizar(empleado: Empleado) -> None:
             """
             UPDATE empleados
             SET nombre = %s,
+                apellido = %s,
                 direccion = AES_ENCRYPT(%s, %s),
                 telefono  = AES_ENCRYPT(%s, %s),
                 correo    = AES_ENCRYPT(%s, %s),
@@ -155,6 +158,7 @@ def actualizar(empleado: Empleado) -> None:
             """,
             (
                 empleado.nombre,
+                empleado.apellido,
                 empleado.direccion, AES_KEY,
                 empleado.telefono,  AES_KEY,
                 empleado.correo,    AES_KEY,
@@ -172,3 +176,20 @@ def eliminar(id_empleado: int) -> None:
         cursor.execute(
             "UPDATE empleados SET activo = FALSE WHERE id = %s", (id_empleado,)
         )
+
+def listar_sin_departamento() -> list[Empleado]:
+    with cursor_db(dictionary=True) as (cursor, _):
+        cursor.execute(
+            _select_cifrado("""
+                WHERE activo = TRUE
+                AND departamento_id IS NULL
+                AND id NOT IN (
+                    SELECT u.id FROM usuarios u
+                    JOIN roles r ON u.rol_id = r.id
+                    WHERE u.activo = TRUE AND r.perfil_bd = 'ti'
+                )
+            """),
+            (AES_KEY, AES_KEY, AES_KEY, AES_KEY, AES_KEY),
+        )
+        filas = cursor.fetchall()
+    return [_fila_a_empleado(fila) for fila in filas]

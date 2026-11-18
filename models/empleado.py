@@ -17,15 +17,16 @@ class Empleado(Persona):
         self,
         id: int | None,
         nombre: str,
+        apellido: str,
         direccion: str,
         telefono: str,
         correo: str,
         rut: str,
         salario: float,
         fecha_inicio_contrato: date,
-        activo:bool = True
+        activo: bool = True
     ) -> None:
-        super().__init__(id, nombre, direccion, telefono, correo, rut)
+        super().__init__(id, nombre, apellido, direccion, telefono, correo, rut)
         self.salario = salario
         self.fecha_inicio_contrato = fecha_inicio_contrato
         self._proyectos = []  # lista de proyectos a los que pertenece el empleado
@@ -131,7 +132,7 @@ class Empleado(Persona):
         return registro
 
     def crear_usuario(self, password: str, rol: "Rol") -> "Usuario":
-        username = Usuario.generar_username(self.nombre)
+        username = Usuario.generar_username(self.get_nombre_completo())
         self._usuario = Usuario(id=self.id, username=username, password=password, rol=rol)
         return self._usuario
 

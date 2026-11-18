@@ -22,6 +22,7 @@ class Persona:
         self,
         id: int | None,
         nombre: str,
+        apellido: str,
         direccion: str,
         telefono: str,
         correo: str,
@@ -29,8 +30,9 @@ class Persona:
     ) -> None:
         self._id = None
         if id is not None:
-            self.id = id  # pasa por el setter, con su validación
+            self.id = id
         self.nombre = nombre
+        self.apellido = apellido
         self.direccion = direccion
         self.telefono = telefono
         self.correo = correo
@@ -53,9 +55,17 @@ class Persona:
 
     @nombre.setter
     def nombre(self, valor: str) -> None:
-        self._nombre = validar_con_patron(
-            valor, "El nombre", PATRON_NOMBRE, ERROR_SOLO_LETRAS
-        )
+        valor = validar_con_patron(valor, "El nombre", PATRON_NOMBRE, ERROR_SOLO_LETRAS)
+        self._nombre = " ".join(valor.split())
+
+    @property
+    def apellido(self) -> str:
+        return self._apellido
+
+    @apellido.setter
+    def apellido(self, valor: str) -> None:
+        valor = validar_con_patron(valor, "El apellido", PATRON_NOMBRE, ERROR_SOLO_LETRAS)
+        self._apellido = " ".join(valor.split())
 
     @property
     def direccion(self) -> str:
@@ -95,8 +105,7 @@ class Persona:
         self._rut = valor
 
     def get_nombre_completo(self) -> str:
-        """Devuelve el nombre tal como fue definido en el modelo."""
-        return self.nombre
+        return f"{self.nombre} {self.apellido}"
 
     def __str__(self) -> str:
         return f"{self.get_nombre_completo()} (RUT: {self.rut})"
