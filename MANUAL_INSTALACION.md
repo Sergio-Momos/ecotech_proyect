@@ -79,10 +79,10 @@ La ruta debe apuntar al entorno recién creado. Mantenga ese entorno activo para
 
 ## 5. Instalar y comprobar las dependencias
 
-La copia revisada no incluye `requirements.txt`. Instale los paquetes que importa el código:
+Instale las dependencias que importa el código:
 
 ```bash
-python -m pip install customtkinter mysql-connector-python python-dotenv openpyxl reportlab
+python -m pip install customtkinter mysql-connector-python python-dotenv openpyxl reportlab argon2-cffi
 ```
 
 | Paquete | Uso en el proyecto |
@@ -92,6 +92,7 @@ python -m pip install customtkinter mysql-connector-python python-dotenv openpyx
 | `python-dotenv` | Lectura de la configuración desde `.env`. |
 | `openpyxl` | Exportación de informes a Excel. |
 | `reportlab` | Exportación de informes a PDF. |
+| `argon2-cffi` | Hash Argon2id de las contraseñas de acceso. |
 
 Tkinter pertenece a la instalación de Python y no se instala con el comando anterior. Compruébelo con:
 
@@ -108,6 +109,8 @@ python -c "import customtkinter, mysql.connector, dotenv, openpyxl, reportlab; p
 ```
 
 **Sobre el cifrado:** aunque el README anterior menciona Fernet y `cryptography`, el código actual cifra los campos de empleados mediante funciones AES de MySQL. No importa `cryptography`; ese paquete no es necesario para esta instalación.
+
+Las contraseñas nuevas se guardan con Argon2id. Las contraseñas existentes con hash PBKDF2 siguen funcionando y se convierten automáticamente a Argon2id después de un inicio de sesión correcto. La columna `usuarios.password_hash VARCHAR(255)` admite el formato Argon2id, así que no requiere cambios en la base de datos.
 
 ## 6. Crear la base de datos
 
@@ -227,6 +230,8 @@ DB_TI_USER=ecotech_ti
 DB_TI_PASSWORD="REEMPLAZAR_ClaveTI#2026"
 
 FERNET_KEY="REEMPLAZAR_POR_CLAVE_GENERADA"
+
+GMAIL_ADDRESS="cuenta.remitente@gmail.com"
 ```
 
 Las contraseñas deben coincidir con las que configuró en MySQL. Ajuste el puerto si su servidor utiliza otro. Mantenga `DB_NAME=ecotech_rrhh` al seguir los bloques SQL de este manual.
@@ -268,9 +273,40 @@ DB_PROFILES = {
 }
 
 AES_KEY = os.environ.get("FERNET_KEY")
+GMAIL_ADDRESS = os.environ.get("GMAIL_ADDRESS")
+GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD")
 ```
 
 No publique `.env` ni archivos que contengan contraseñas reales. La copia revisada ya los excluye de Git mediante `.gitignore`.
+
+### 8.3. Recuperación de contraseña por Gmail API
+
+Cada persona que vaya a enviar códigos desde su equipo debe configurar un remitente autorizado. La aplicación usa Gmail API con OAuth de escritorio por HTTPS; no usa contraseña SMTP ni contraseña de aplicación.
+
+1. En [Google Cloud Console](https://console.cloud.google.com/), crea un proyecto o selecciona uno existente y habilita **Gmail API**.
+2. Configura la pantalla de consentimiento OAuth. Si la aplicación está en modo de prueba, agrega como usuario de prueba la cuenta Gmail remitente.
+3. Crea un ID de cliente OAuth de tipo **Aplicación de escritorio** y descarga el archivo JSON.
+4. Guarda ese archivo en la carpeta principal del proyecto con el nombre `credentials.json`.
+5. En `.env`, configura `GMAIL_ADDRESS` con la misma dirección Gmail autorizada. No agregues `GMAIL_APP_PASSWORD`.
+6. Instala las bibliotecas de OAuth y Gmail API dentro del entorno virtual:
+
+   ```bash
+   python -m pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+   ```
+
+7. Inicia la aplicación. La primera vez que se solicite un código, se abrirá el navegador para autorizar el envío desde esa cuenta. Al completar la autorización se creará `token.json` en la carpeta del proyecto.
+
+`credentials.json` y `token.json` están excluidos de Git porque permiten acceder al remitente. Cada integrante debe configurar sus propios archivos localmente; no se deben subir al repositorio ni compartir por chat. Si se revoca el acceso o cambia la cuenta remitente, elimina `token.json` y repite la autorización con las credenciales correspondientes. El equipo necesita conexión HTTPS a Google para autorizar y enviar los mensajes.
+
+#### Preparar la base de datos
+
+Antes de habilitar el flujo, ejecuta una sola vez como administrador SQL el archivo `database/migracion_recuperacion_password.sql`. La migración agrega la fecha del último cambio de contraseña, crea la tabla de códigos temporales y amplía los permisos de `ecotech_auth` para consultar los datos necesarios y actualizar contraseñas. Está dirigida a cuentas técnicas creadas con host `%`; si el host es distinto, ajusta las sentencias `GRANT` al host que muestre `mysql.user`.
+
+#### Usar la recuperación
+
+En el inicio de sesión, selecciona **Olvidé mi contraseña** e ingresa el nombre completo, RUT y correo registrados para la cuenta. Si coinciden con una cuenta activa, la aplicación envía un código de seis dígitos a ese correo. Ingresa el código y la contraseña nueva para completar el cambio. El código vence en 10 minutos y se invalida al usarlo o al solicitar otro. Si los datos no coinciden, la aplicación pide revisarlos sin indicar cuál dato pertenece a una cuenta.
+
+Las contraseñas de acceso vencen a los 30 días y la aplicación solicita cambiarlas al iniciar sesión.
 
 ## 9. Probar las cuatro conexiones
 
