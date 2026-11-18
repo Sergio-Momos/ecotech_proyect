@@ -24,9 +24,10 @@ class Empleado(Persona):
         rut: str,
         salario: float,
         fecha_inicio_contrato: date,
-        activo:bool = True
+        activo:bool = True,
+        apellido: str = "",
     ) -> None:
-        super().__init__(id, nombre, direccion, telefono, correo, rut)
+        super().__init__(id, nombre, apellido, direccion, telefono, correo, rut)
         self._salario = salario
         self._fecha_inicio_contrato = fecha_inicio_contrato
         self._valor_proyectos = []  # lista de proyectos a los que pertenece el empleado
@@ -113,7 +114,7 @@ class Empleado(Persona):
     def crear_usuario(self, password: str, rol: "Rol") -> "Usuario":
         if self._valor_usuario is not None:
             raise ValueError("El empleado ya tiene una cuenta de usuario.")
-        username = Usuario.generar_base_username(self._nombre)
+        username = Usuario.generar_base_username(self.get_nombre_completo())
         self._valor_usuario = Usuario(id=self._id, username=username, password=password, rol=rol)
         return self._valor_usuario
 

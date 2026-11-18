@@ -80,7 +80,7 @@ def crear_para_empleado(empleado, password: str, rol) -> Usuario:
     username garantizado único contra la BD (no contra memoria), y guarda
     de una vez. Esta es la función que debería usar la GUI — no
     Empleado.crear_usuario(), que solo resuelve colisiones en memoria."""
-    username = generar_username_unico(empleado._nombre)
+    username = generar_username_unico(empleado.get_nombre_completo())
     usuario = Usuario(id=empleado._id, username=username, password=password, rol=rol)
     crear(usuario)
     empleado._valor_usuario = usuario
@@ -159,7 +159,7 @@ def solicitar_recuperacion_password(nombre: str, rut: str, correo: str) -> tuple
                    FROM empleados e JOIN usuarios u ON u.id = e.id
                    WHERE u.activo = TRUE
                      AND e.rut_hash = %s
-                     AND LOWER(TRIM(e.nombre)) = LOWER(TRIM(%s))
+                     AND LOWER(TRIM(CONCAT_WS(' ', e.nombre, e.apellido))) = LOWER(TRIM(%s))
                      AND CAST(AES_DECRYPT(e.correo, %s) AS CHAR) = %s
                    LIMIT 1""",
                 (AES_KEY, rut_hash, nombre, AES_KEY, correo),

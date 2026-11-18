@@ -9,6 +9,7 @@ def _fila_a_empleado(fila: dict) -> Empleado:
     return Empleado(
         id=fila["id"],
         nombre=fila["nombre"],
+        apellido=fila["apellido"],
         direccion=fila["direccion"],
         telefono=fila["telefono"],
         correo=fila["correo"],
@@ -22,7 +23,7 @@ def _fila_a_empleado(fila: dict) -> Empleado:
 def _select_cifrado(where: str) -> str:
     """Construye el SELECT con AES_DECRYPT y CAST para todas las columnas cifradas."""
     return f"""
-        SELECT id, nombre,
+        SELECT id, nombre, apellido,
             CAST(AES_DECRYPT(direccion, %s) AS CHAR) AS direccion,
             CAST(AES_DECRYPT(telefono,  %s) AS CHAR) AS telefono,
             CAST(AES_DECRYPT(correo,    %s) AS CHAR) AS correo,
@@ -46,14 +47,15 @@ def crear(empleado: Empleado) -> int:
         cursor.execute(
             """
             INSERT INTO empleados
-                (nombre, direccion, telefono, correo, rut, rut_hash, salario, fecha_inicio_contrato)
-            VALUES (%s,
+                (nombre, apellido, direccion, telefono, correo, rut, rut_hash, salario, fecha_inicio_contrato)
+            VALUES (%s, %s,
                     AES_ENCRYPT(%s, %s), AES_ENCRYPT(%s, %s),
                     AES_ENCRYPT(%s, %s), AES_ENCRYPT(%s, %s),
                     %s, AES_ENCRYPT(%s, %s), %s)
             """,
             (
                 empleado._nombre,
+                empleado._apellido,
                 empleado._direccion, AES_KEY,
                 empleado._telefono,  AES_KEY,
                 empleado._correo,    AES_KEY,
@@ -131,7 +133,15 @@ def listar_sin_departamento() -> list[Empleado]:
     """Lista empleados activos disponibles para una asignación departamental."""
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute(
-            _select_cifrado("WHERE activo = TRUE AND departamento_id IS NULL"),
+            _select_cifrado("""
+                WHERE activo = TRUE
+                AND departamento_id IS NULL
+                AND id NOT IN (
+                    SELECT u.id FROM usuarios u
+                    JOIN roles r ON u.rol_id = r.id
+                    WHERE u.activo = TRUE AND r.perfil_bd = 'ti'
+                )
+            """),
             (AES_KEY, AES_KEY, AES_KEY, AES_KEY, AES_KEY),
         )
         filas = cursor.fetchall()
@@ -167,6 +177,7 @@ def actualizar(empleado: Empleado) -> None:
             """
             UPDATE empleados
             SET nombre = %s,
+                apellido = %s,
                 direccion = AES_ENCRYPT(%s, %s),
                 telefono  = AES_ENCRYPT(%s, %s),
                 correo    = AES_ENCRYPT(%s, %s),
@@ -178,6 +189,7 @@ def actualizar(empleado: Empleado) -> None:
             """,
             (
                 empleado._nombre,
+                empleado._apellido,
                 empleado._direccion, AES_KEY,
                 empleado._telefono,  AES_KEY,
                 empleado._correo,    AES_KEY,

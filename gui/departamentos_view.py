@@ -6,6 +6,7 @@ from models.rol import Rol
 from repositorios import departamento_repo, empleado_repo
 from gui.componentes import crear_encabezado, limpiar_contenedor
 from utils.auditoria import accion, error as log_error
+from mysql.connector import Error as ErrorBD
 
 class DepartamentoFormView(ctk.CTkToplevel):
     def __init__(self, parent, *,on_guardado, usuario_id,departamento_existente=None):
@@ -24,8 +25,12 @@ class DepartamentoFormView(ctk.CTkToplevel):
         self._entrada_nombre.pack()
 
         ctk.CTkLabel(self, text="Gerente").pack(pady=(20, 0))
-        empleados = empleado_repo.listar_todos()
-        self._mapa_empleados = {f"{e._nombre} (RUT {e._rut})": e for e in empleados}
+        propios = list(departamento_existente._empleados) if departamento_existente else []
+        ids_propios = {e._id for e in propios}
+        libres = [e for e in empleado_repo.listar_sin_departamento() if e._id not in ids_propios]
+        self._mapa_empleados = {
+            f"{e.get_nombre_completo()} (RUT {e._rut})": e for e in propios + libres
+        }
         valores = list(self._mapa_empleados.keys()) or ["No hay empleados disponibles"]
         self._selector_gerente = ctk.CTkOptionMenu(self, values=valores, width=280)
         self._selector_gerente.pack()
@@ -62,6 +67,11 @@ class DepartamentoFormView(ctk.CTkToplevel):
                     else "ACTUALIZAR_DEPARTAMENTO", str(e))
             messagebox.showerror("Datos inválidos", str(e))
             return
+        except (ConnectionError, ErrorBD) as e:
+            accion_log = "CREAR_DEPARTAMENTO" if self._departamento_existente is None else "ACTUALIZAR_DEPARTAMENTO"
+            log_error(self._usuario_id, accion_log, str(e))
+            messagebox.showerror("Error de base de datos", "No se pudo guardar el departamento.")
+            return
 
         self._on_guardado()
         self.destroy()
@@ -92,12 +102,21 @@ class NominaDepartamentoView(ctk.CTkToplevel):
 
     def _recargar(self) -> None:
         limpiar_contenedor(self._lista)
+        try:
+            depto = departamento_repo.buscar_por_id(self._departamento_id)
+            candidatos = empleado_repo.listar_sin_departamento()
+        except (ConnectionError, ErrorBD) as e:
+            log_error(self._usuario_id, "CARGAR_NOMINA", str(e))
+            messagebox.showerror("Error de base de datos", "No se pudo cargar la nómina.")
+            return
+        if depto is None:
+            messagebox.showerror("Departamento no disponible", "No se encontró el departamento seleccionado.")
+            return
 
-        depto = departamento_repo.buscar_por_id(self._departamento_id)
         for empleado in depto._empleados:
             fila = ctk.CTkFrame(self._lista)
             fila.pack(fill="x", pady=3)
-            etiqueta = empleado._nombre
+            etiqueta = empleado.get_nombre_completo()
             es_gerente = empleado._id == depto._gerente._id
             if es_gerente:
                 etiqueta += " · Gerente"
@@ -108,9 +127,8 @@ class NominaDepartamentoView(ctk.CTkToplevel):
                     command=lambda e=empleado: self._quitar(e),
                 ).pack(side="right", padx=6)
 
-        candidatos = empleado_repo.listar_sin_departamento()
         self._mapa_candidatos = {
-            f"{e._nombre} (RUT {e._rut})": e for e in candidatos
+            f"{e.get_nombre_completo()} (RUT {e._rut})": e for e in candidatos
         }
         valores = list(self._mapa_candidatos.keys()) or ["(sin candidatos)"]
         self._selector_nuevo.configure(values=valores)
@@ -128,6 +146,10 @@ class NominaDepartamentoView(ctk.CTkToplevel):
             messagebox.showerror("No se pudo asignar", str(e))
             self._recargar()
             return
+        except (ConnectionError, ErrorBD) as e:
+            log_error(self._usuario_id, "ASIGNAR_EMPLEADO_DPTO", str(e))
+            messagebox.showerror("Error de base de datos", "No se pudo asignar el empleado.")
+            return
         accion(self._usuario_id, "ASIGNAR_EMPLEADO_DPTO",
             f"dpto_id={self._departamento_id}, empleado_id={empleado._id}")
         self._recargar()
@@ -138,6 +160,10 @@ class NominaDepartamentoView(ctk.CTkToplevel):
             departamento_repo.quitar_empleado(empleado._id)
         except ValueError as e:
             messagebox.showerror("No se pudo quitar", str(e))
+            return
+        except (ConnectionError, ErrorBD) as e:
+            log_error(self._usuario_id, "QUITAR_EMPLEADO_DPTO", str(e))
+            messagebox.showerror("Error de base de datos", "No se pudo quitar el empleado.")
             return
         accion(self._usuario_id, "QUITAR_EMPLEADO_DPTO",
             f"dpto_id={self._departamento_id}, empleado_id={empleado._id}")
@@ -164,8 +190,15 @@ class DepartamentosView(ctk.CTkFrame):
     def _cargar_lista(self) -> None:
         limpiar_contenedor(self._lista)
 
+        try:
+            departamentos = departamento_repo.listar_todos()
+        except (ConnectionError, ErrorBD) as e:
+            log_error(self._app._usuario_actual._id, "LISTAR_DEPARTAMENTOS", str(e))
+            messagebox.showerror("Error de base de datos", "No se pudo cargar la lista de departamentos.")
+            return
+
         rol = self._app._usuario_actual._rol
-        for depto in departamento_repo.listar_todos():
+        for depto in departamentos:
             fila = ctk.CTkFrame(self._lista)
             fila.pack(fill="x", pady=4)
 
@@ -196,7 +229,11 @@ class DepartamentosView(ctk.CTkFrame):
 
     def _eliminar(self, depto: Departamento) -> None:
         if messagebox.askyesno("Confirmar", f"¿Eliminar '{depto._nombre}'?..."):
-            departamento_repo.eliminar(depto._id)
-            accion(self._app._usuario_actual._id, "ELIMINAR_DEPARTAMENTO",
-                f"dpto_id={depto._id}")
-            self._cargar_lista()
+            try:
+                departamento_repo.eliminar(depto._id)
+                accion(self._app._usuario_actual._id, "ELIMINAR_DEPARTAMENTO",
+                    f"dpto_id={depto._id}")
+                self._cargar_lista()
+            except (ConnectionError, ErrorBD) as e:
+                log_error(self._app._usuario_actual._id, "ELIMINAR_DEPARTAMENTO", str(e))
+                messagebox.showerror("Error de base de datos", "No se pudo eliminar el departamento.")

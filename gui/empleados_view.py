@@ -28,7 +28,7 @@ class EmpleadoFormView(ctk.CTkToplevel):
                 ("Primer nombre", "nombre"), ("Primer apellido", "apellido"),
             ]
         else:
-            etiquetas_y_atributos = [("Nombre", "nombre")]
+            etiquetas_y_atributos = [("Nombre", "nombre"), ("Apellido", "apellido")]
         etiquetas_y_atributos += [
             ("Dirección", "direccion"), ("Teléfono", "telefono"),
             ("Correo", "correo"), ("RUT", "rut"), ("Salario", "salario"),
@@ -53,14 +53,8 @@ class EmpleadoFormView(ctk.CTkToplevel):
     def _guardar(self) -> None:
         accion_log = "CREAR_EMPLEADO" if self._empleado_existente is None else "ACTUALIZAR_EMPLEADO"
         try:
-            nombre = self._entradas["nombre"].get()
-            if self._empleado_existente is None:
-                nombre = validar_nombre_o_apellido(nombre, "El primer nombre")
-                apellido = validar_nombre_o_apellido(
-                    self._entradas["apellido"].get(), "El primer apellido"
-                )
-                # El modelo y la base de datos guardan el nombre completo en un solo campo.
-                nombre = f"{nombre} {apellido}"
+            nombre = validar_nombre_o_apellido(self._entradas["nombre"].get(), "El nombre")
+            apellido = validar_nombre_o_apellido(self._entradas["apellido"].get(), "El apellido")
             try:
                 fecha = datetime.strptime(self._entrada_fecha.get(), "%Y-%m-%d").date()
             except ValueError:
@@ -74,6 +68,7 @@ class EmpleadoFormView(ctk.CTkToplevel):
                 nuevo = Empleado(
                     id=None,
                     nombre=nombre,
+                    apellido=apellido,
                     direccion=self._entradas["direccion"].get(),
                     telefono=self._entradas["telefono"].get(),
                     correo=self._entradas["correo"].get(),
@@ -86,6 +81,7 @@ class EmpleadoFormView(ctk.CTkToplevel):
             else:
                 emp = self._empleado_existente
                 emp._nombre = self._entradas["nombre"].get()
+                emp._apellido = self._entradas["apellido"].get()
                 emp._direccion = self._entradas["direccion"].get()
                 emp._telefono = self._entradas["telefono"].get()
                 emp._correo = self._entradas["correo"].get()
@@ -137,7 +133,7 @@ class EmpleadosView(ctk.CTkFrame):
             fila = ctk.CTkFrame(self._lista)
             fila.pack(fill="x", pady=4)
 
-            texto = f"{empleado._nombre}  ·  RUT {empleado._rut}  ·  ${empleado._salario:,.0f}"
+            texto = f"{empleado.get_nombre_completo()}  ·  RUT {empleado._rut}  ·  ${empleado._salario:,.0f}"
             ctk.CTkLabel(fila, text=texto).pack(side="left", padx=10, pady=8)
 
             if rol.tiene_permiso(Rol._ELIMINAR_EMPLEADOS):
@@ -162,13 +158,13 @@ class EmpleadosView(ctk.CTkFrame):
                         empleado_existente=empleado)
 
     def _desactivar(self, empleado: Empleado) -> None:
-        if not messagebox.askyesno("Confirmar", f"¿Desactivar a {empleado._nombre}?"):
+        if not messagebox.askyesno("Confirmar", f"¿Desactivar a {empleado.get_nombre_completo()}?"):
             return
         try:
             empleado_repo.eliminar(empleado._id)
             accion(self._app._usuario_actual._id, "DESACTIVAR_EMPLEADO", f"empleado_id={empleado._id}")
         except (ConnectionError, ErrorBD) as e:
-            self._error_bd("DESACTIVAR_EMPLEADO", f"No se pudo desactivar a {empleado._nombre}.", e)
+            self._error_bd("DESACTIVAR_EMPLEADO", f"No se pudo desactivar a {empleado.get_nombre_completo()}.", e)
             return
         self._cargar_lista()
 

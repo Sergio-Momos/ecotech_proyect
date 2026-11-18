@@ -5,6 +5,7 @@ USE ecotech_rrhh;
 CREATE TABLE empleados (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
     direccion VARCHAR(255) NOT NULL,
     telefono VARCHAR(255) NOT NULL,
     correo VARCHAR(255) NOT NULL,

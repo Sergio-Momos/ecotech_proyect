@@ -124,6 +124,8 @@ mysql -u root -p
 
 Ingrese la contraseña cuando se solicite. Si su administrador tiene otro nombre, sustituya `root`.
 
+En una base ya instalada, ejecute una vez `SOURCE database/migracion_apellido.sql;` para agregar el campo de apellido antes de iniciar la versión actualizada. Los nombres ya guardados se conservan; complete los apellidos faltantes desde la edición de empleados. No vuelva a ejecutar el esquema completo sobre una base con datos.
+
 Dentro del cliente MySQL ejecute:
 
 ```sql
