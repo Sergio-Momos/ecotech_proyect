@@ -20,3 +20,7 @@ logs/
 MEJORAS_GESTION_HORAS.md
 MANUAL_INSTALACION.docx
 UML_ACTUALIZADO.md
+MANUAL_INSTALACION.md
+database/esquema.sql
+database/migracion_indicadores.sql
+database/migracion_integridad_gerentes.sql

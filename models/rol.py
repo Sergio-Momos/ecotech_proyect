@@ -21,6 +21,7 @@ class Rol:
     _LEER_REGISTROS_TODOS = "registros.leer_todos"
     _ACTUALIZAR_REGISTROS = "registros.actualizar"
     _ELIMINAR_REGISTROS = "registros.eliminar"
+    _LEER_INDICADORES = "indicadores.leer"
 
     _CAMPO_PERMISO = "El permiso"
     _CREAR_USUARIOS = "usuarios.crear"
@@ -42,6 +43,7 @@ class Rol:
             _LEER_REGISTROS_TODOS,
             _ACTUALIZAR_REGISTROS,
             _ELIMINAR_REGISTROS,
+            _LEER_INDICADORES,
             _CREAR_REGISTRO_PROPIO,
             _LEER_REGISTROS_PROPIOS,
         }

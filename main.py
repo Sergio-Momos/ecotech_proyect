@@ -51,7 +51,7 @@ def sembrar_empleados(roles: dict) -> dict:
     print("\n--- Empleados base ---")
     datos = [
         ("Admin Principal",  "Oficina Central 1",  "900000001", "admin@ecotech.cl",      "21.456.789-K", 900000, date(2024, 1, 1),  "rrhh"),
-        ("Soporte TI",       "Oficina Central 2",  "900000002", "ti@ecotech.cl",          "20.333.444-3", 800000, date(2024, 1, 1),  "ti"),
+        ("Soporte TI",       "Oficina Central 2",  "900000002", "ti@ecotech.cl",          "22.261.674-3", 800000, date(2024, 1, 1),  "ti"),
         ("Ana Torres",       "Los Alerces 123",    "912345678", "ana.torres@ecotech.cl",  "11.111.111-1", 650000, date(2023, 3, 1),  "empleado"),
         ("Juan Perez",       "Neptuno 097",        "987654321", "juan.perez@ecotech.cl",  "22.222.222-2", 580000, date(2024, 6, 15), "empleado"),
         ("Camila Rios",      "Av. Siempre Viva 742","933333333","camila.rios@ecotech.cl", "18.765.432-7", 725450, date(2024, 4, 20), "empleado"),

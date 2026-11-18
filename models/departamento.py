@@ -41,7 +41,14 @@ class Departamento:
     def _gerente(self, valor: Empleado) -> None:
         if not isinstance(valor, Empleado):
             raise TypeError("El gerente debe ser una instancia de la clase Empleado.")
+        if (hasattr(self, "_valor_empleados") and valor._departamento is not None
+                and valor._departamento is not self
+                and valor._departamento._id != self._id):
+            raise ValueError("El gerente ya pertenece a otro departamento.")
         self._valor_gerente = valor
+        if hasattr(self, "_valor_empleados"):
+            if not any(e._id == valor._id for e in self._valor_empleados):
+                self.agregar_empleado(valor)
 
     @property
     def _empleados(self) -> tuple:
@@ -60,6 +67,8 @@ class Departamento:
     def eliminar_empleado(self, empleado: Empleado) -> None:
         if not isinstance(empleado, Empleado):
             raise TypeError("El empleado debe ser una instancia de la clase Empleado.")
+        if empleado._id == self._gerente._id:
+            raise ValueError("No se puede quitar al gerente de su departamento.")
                 
         for e in self._valor_empleados:
             if e._id == empleado._id:
@@ -84,6 +93,8 @@ class Departamento:
     # Reutilizamos la lógica ya creada
         if not any(e._id == empleado._id for e in self._valor_empleados):
             raise ValueError(f"El empleado con id {empleado._id} no pertenece a este departamento.")
+        if empleado._id == self._gerente._id:
+            raise ValueError("No se puede reasignar al gerente fuera de su departamento.")
         if any(e._id == empleado._id for e in destino._valor_empleados):
             raise ValueError(f"El empleado con id {empleado._id} ya pertenece al departamento de destino.")
         self._valor_empleados = [e for e in self._valor_empleados if e._id != empleado._id]

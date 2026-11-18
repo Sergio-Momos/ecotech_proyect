@@ -20,6 +20,7 @@ CREATE TABLE departamentos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     gerente_id INT NOT NULL,
+    CONSTRAINT uq_departamento_gerente UNIQUE (gerente_id),
     FOREIGN KEY (gerente_id) REFERENCES empleados(id) ON DELETE RESTRICT
 );
 
@@ -69,4 +70,16 @@ CREATE TABLE registros_tiempo (
     proyecto_id INT NOT NULL,
     FOREIGN KEY (empleado_id) REFERENCES empleados(id) ON DELETE CASCADE,
     FOREIGN KEY (proyecto_id) REFERENCES proyectos(id) ON DELETE RESTRICT
+);
+
+CREATE TABLE indicadores (
+    codigo VARCHAR(30) NOT NULL,
+    fecha DATE NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    valor DECIMAL(15,4) NOT NULL,
+    unidad_medida VARCHAR(30) NOT NULL,
+    fuente VARCHAR(100) NOT NULL,
+    actualizado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (codigo, fecha)
 );

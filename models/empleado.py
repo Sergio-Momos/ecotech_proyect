@@ -84,6 +84,9 @@ class Empleado(Persona):
         return self._valor_departamento
 
     def _asignar_departamento(self, departamento) -> None:
+        if self._valor_departamento is not None and self._valor_departamento is not departamento:
+            if self._valor_departamento._id != departamento._id:
+                raise ValueError(f"El empleado con id {self._id} ya pertenece a otro departamento.")
         self._valor_departamento = departamento
 
     def _quitar_departamento(self, departamento) -> None:

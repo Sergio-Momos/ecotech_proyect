@@ -97,11 +97,16 @@ class NominaDepartamentoView(ctk.CTkToplevel):
         for empleado in depto._empleados:
             fila = ctk.CTkFrame(self._lista)
             fila.pack(fill="x", pady=3)
-            ctk.CTkLabel(fila, text=empleado._nombre).pack(side="left", padx=10, pady=6)
-            ctk.CTkButton(
-                fila, text="Quitar", width=80, fg_color="#B3261E",
-                command=lambda e=empleado: self._quitar(e),
-            ).pack(side="right", padx=6)
+            etiqueta = empleado._nombre
+            es_gerente = empleado._id == depto._gerente._id
+            if es_gerente:
+                etiqueta += " · Gerente"
+            ctk.CTkLabel(fila, text=etiqueta).pack(side="left", padx=10, pady=6)
+            if not es_gerente:
+                ctk.CTkButton(
+                    fila, text="Quitar", width=80, fg_color="#B3261E",
+                    command=lambda e=empleado: self._quitar(e),
+                ).pack(side="right", padx=6)
 
         candidatos = empleado_repo.listar_sin_departamento()
         self._mapa_candidatos = {
@@ -129,7 +134,11 @@ class NominaDepartamentoView(ctk.CTkToplevel):
         self._on_cambio()
 
     def _quitar(self, empleado) -> None:
-        departamento_repo.quitar_empleado(empleado._id)
+        try:
+            departamento_repo.quitar_empleado(empleado._id)
+        except ValueError as e:
+            messagebox.showerror("No se pudo quitar", str(e))
+            return
         accion(self._usuario_id, "QUITAR_EMPLEADO_DPTO",
             f"dpto_id={self._departamento_id}, empleado_id={empleado._id}")
         self._recargar()

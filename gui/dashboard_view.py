@@ -8,6 +8,7 @@ from gui.proyectos_view import ProyectosView
 from gui.registros_view import RegistrosView
 from gui.ti_view import TiView
 from gui.informes_view import InformesView
+from gui.indicadores_view import IndicadoresView
 class DashboardView(ctk.CTkFrame):
     def __init__(self, parent, app):
         super().__init__(parent)
@@ -43,6 +44,7 @@ class DashboardView(ctk.CTkFrame):
             (Rol._ASIGNAR_EMPLEADOS_PROYECTO, "Gestionar Proyectos", lambda: app.navegar_a(ProyectosView)),
             (Rol._LEER_REGISTROS_PROPIOS,  texto_registros, lambda: app.navegar_a(RegistrosView)),
             (Rol._LEER_REGISTROS_TODOS, "Informes", lambda: app.navegar_a(InformesView)),
+            (Rol._LEER_INDICADORES, "Indicadores UF", lambda: app.navegar_a(IndicadoresView)),
             (Rol._CREAR_USUARIOS, "Gestión de usuarios", lambda: app.navegar_a(TiView)),
         ]
 

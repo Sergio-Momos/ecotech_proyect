@@ -35,9 +35,11 @@ ecotech_proyect/
 ├── config.py              # Configuración local de la conexión
 ├── .env                   # Contraseñas y clave de cifrado locales
 ├── database/
-│   ├── esquema.sql        # Creación de la base y sus siete tablas
+│   ├── esquema.sql        # Creación de la base y sus ocho tablas
+│   ├── migracion_indicadores.sql # Indicadores para una base ya instalada
 │   └── conexion.py        # Conexiones con los cuatro perfiles técnicos
 ├── gui/                   # Ventanas y formularios
+├── integraciones/         # Conectores a servicios externos
 ├── models/                # Entidades y reglas de validación
 ├── repositorios/          # Consultas y operaciones de base de datos
 └── utils/                 # Validaciones, fechas y auditoría
@@ -128,12 +130,13 @@ USE ecotech_rrhh;
 SHOW TABLES;
 ```
 
-En Workbench, abra `database/esquema.sql` y ejecute el archivo completo. Deben aparecer estas siete tablas:
+En Workbench, abra `database/esquema.sql` y ejecute el archivo completo. Deben aparecer estas ocho tablas:
 
 ```text
 departamentos
 empleados
 empleados_proyectos
+indicadores
 proyectos
 registros_tiempo
 roles
@@ -156,6 +159,12 @@ ALTER TABLE ecotech_rrhh.empleados
 ```
 
 Este ajuste evita almacenar bytes cifrados como texto. MySQL indica que los resultados binarios de cifrado deben guardarse en columnas `VARBINARY` o `BLOB`; consulte la [documentación oficial de las funciones de cifrado](https://dev.mysql.com/doc/refman/8.4/en/encryption-functions.html). En una base que ya tiene información, respalde y revise los datos antes de aplicar cambios; convertir columnas no recupera valores que ya se hayan dañado.
+
+### 6.2. Actualizar una base ya instalada con indicadores
+
+Si la base ya fue creada antes de incorporar la tabla `indicadores`, no vuelva a ejecutar el esquema completo. Con una cuenta administradora, ejecute `database/migracion_indicadores.sql` después de crear las cuentas técnicas. La migración agrega la tabla, los permisos SQL de RRHH y el permiso de aplicación que muestra **Indicadores UF** en su panel. Si ejecutó una versión anterior de esta migración, vuelva a ejecutar el archivo actualizado y cierre e inicie sesión otra vez. Al actualizar, la interfaz guarda fecha, valor en pesos, unidad, nombre y fuente de cada dato.
+
+La aplicación consume la serie diaria `uf` de [indicadores.cl](https://indicadores.cl/api/v1/uf.json), cuyos datos de UF provienen del SII. Se validan el código y la estructura JSON, las fechas y los valores positivos antes de guardar. Los fallos de red o de formato se muestran en la interfaz y se registran en `logs/errores.log`; la actualización no sobrescribe valores si la consulta falla. La fuente pide atribución; la interfaz identifica a indicadores.cl y al SII.
 
 ## 7. Crear los usuarios técnicos de MySQL
 
@@ -188,6 +197,7 @@ GRANT INSERT, UPDATE, DELETE ON ecotech_rrhh.departamentos TO 'ecotech_rrhh'@'lo
 GRANT INSERT, UPDATE ON ecotech_rrhh.proyectos TO 'ecotech_rrhh'@'localhost';
 GRANT INSERT, DELETE ON ecotech_rrhh.empleados_proyectos TO 'ecotech_rrhh'@'localhost';
 GRANT INSERT, UPDATE, DELETE ON ecotech_rrhh.registros_tiempo TO 'ecotech_rrhh'@'localhost';
+GRANT SELECT, INSERT, UPDATE ON ecotech_rrhh.indicadores TO 'ecotech_rrhh'@'localhost';
 
 -- Permisos adicionales de RRHH para cargar los datos iniciales con main.py.
 GRANT INSERT, UPDATE ON ecotech_rrhh.roles TO 'ecotech_rrhh'@'localhost';
