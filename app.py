@@ -29,10 +29,17 @@ class App(ctk.CTk):
             self._frame_actual.destroy()
         self._frame_actual = nuevo
 
-    def iniciar_sesion_exitosa(self, usuario) -> None:
+    def iniciar_sesion_exitosa(self, usuario, *, password_vencida: bool = False) -> None:
         self._usuario_actual = usuario
         establecer_perfil_activo(usuario._rol._perfil_bd)
         accion(usuario._id, "LOGIN_EXITOSO")
+        if password_vencida:
+            from gui.password_view import CambiarPasswordView
+            self.navegar_a(CambiarPasswordView)
+            return
+        self.abrir_panel_principal()
+
+    def abrir_panel_principal(self) -> None:
         self.navegar_a(DashboardView)
 
     def cerrar_sesion(self) -> None:

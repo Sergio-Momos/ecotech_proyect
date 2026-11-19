@@ -2,7 +2,7 @@
 
 **Sistema:** Gestión de Recursos Humanos (RRHH).
 
-**Fecha de revisión:** 16 de octubre de 2026.
+**Fecha de revisión:** 18 de noviembre de 2026.
 
 **Alcance:** instalación local desde el código fuente, para desarrollo o demostración.
 
@@ -35,8 +35,11 @@ ecotech_proyect/
 ├── config.py              # Configuración local de la conexión
 ├── .env                   # Contraseñas y clave de cifrado locales
 ├── database/
-│   ├── esquema.sql        # Creación de la base y sus ocho tablas
+│   ├── esquema.sql        # Creación de la base y sus tablas
+│   ├── migracion_apellido.sql # Apellido separado en bases existentes
 │   ├── migracion_indicadores.sql # Indicadores para una base ya instalada
+│   ├── migracion_recuperacion_password.sql # Recuperación de contraseña
+│   └── reset_pruebas.sql # Vaciado de datos para pruebas
 │   └── conexion.py        # Conexiones con los cuatro perfiles técnicos
 ├── gui/                   # Ventanas y formularios
 ├── integraciones/         # Conectores a servicios externos
@@ -45,7 +48,7 @@ ecotech_proyect/
 └── utils/                 # Validaciones, fechas y auditoría
 ```
 
-**Antes de comenzar:** `config.py` y `.env` están excluidos de Git y pueden faltar en una copia descargada. Este manual explica cómo crearlos. El comentario inicial de `main.py` menciona `seed.py` y `database/roles_mysql.sql`, pero esos archivos no están presentes en la copia revisada: utilice `main.py` y las instrucciones SQL del apartado 7.
+**Antes de comenzar:** `config.py` y `.env` están excluidos de Git y pueden faltar en una copia descargada. Este manual explica cómo crearlos. La siembra de demostración se ejecuta explícitamente con `python main.py --seed-demo`.
 
 ## 4. Abrir el proyecto y crear el entorno virtual
 
@@ -286,7 +289,6 @@ DB_PROFILES = {
 
 AES_KEY = os.environ.get("FERNET_KEY")
 GMAIL_ADDRESS = os.environ.get("GMAIL_ADDRESS")
-GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD")
 ```
 
 No publique `.env` ni archivos que contengan contraseñas reales. La copia revisada ya los excluye de Git mediante `.gitignore`.
@@ -312,7 +314,15 @@ Cada persona que vaya a enviar códigos desde su equipo debe configurar un remit
 
 #### Preparar la base de datos
 
-Antes de habilitar el flujo, ejecuta una sola vez como administrador SQL el archivo `database/migracion_recuperacion_password.sql`. La migración agrega la fecha del último cambio de contraseña, crea la tabla de códigos temporales y amplía los permisos de `ecotech_auth` para consultar los datos necesarios y actualizar contraseñas. Está dirigida a cuentas técnicas creadas con host `%`; si el host es distinto, ajusta las sentencias `GRANT` al host que muestre `mysql.user`.
+Antes de habilitar el flujo, ejecuta una sola vez como administrador SQL el archivo `database/migracion_recuperacion_password.sql`. La migración agrega la fecha del último cambio de contraseña, crea la tabla de códigos temporales y amplía los permisos de `ecotech_auth` para consultar los datos necesarios y actualizar contraseñas. El script asume que la cuenta se creó como `'ecotech_auth'@'localhost'`, tal como indica esta instalación. Si se creó con otro host, ajusta los `GRANT` para que coincidan con la cuenta existente.
+
+Si un intento anterior terminó con el error MySQL 1410 en un `GRANT`, no vuelvas a ejecutar toda la migración: la columna y la tabla podrían ya existir. Con la cuenta administradora, ejecuta solo los permisos que faltaron:
+
+```sql
+GRANT SELECT ON ecotech_rrhh.empleados TO 'ecotech_auth'@'localhost';
+GRANT UPDATE ON ecotech_rrhh.usuarios TO 'ecotech_auth'@'localhost';
+GRANT SELECT, INSERT, UPDATE ON ecotech_rrhh.password_reset_tokens TO 'ecotech_auth'@'localhost';
+```
 
 #### Usar la recuperación
 
@@ -341,32 +351,32 @@ Esta comprobación verifica acceso y `SELECT 1`; no comprueba todos los permisos
 
 ## 10. Cargar los datos iniciales
 
-Para la base nueva, ejecute:
+La siembra usa datos ficticios y contraseñas demo definidas en `main.py`. Solo se ejecuta con el comando explícito:
 
 ```bash
-python main.py
+python main.py --seed-demo
 ```
 
-El programa utiliza el perfil técnico `rrhh` y debe crear:
+El programa utiliza el perfil técnico `rrhh` y crea o reutiliza:
 
 - Tres roles: Recursos Humanos, TI y Empleado.
 - Cinco empleados y sus cuentas de acceso.
 - Un departamento: `RecursosHumanos`.
-- Un proyecto: `PanelesSolares`, con Ana Torres y Camila Rios asignadas.
+- Un proyecto: `PanelesSolares`, con Ana Prueba y Camila Demo asignadas.
 
-Espere el mensaje **«Siembra completada»**. La consola muestra los nombres de usuario generados. En una base vacía, las credenciales de demostración son:
+En una base vacía, los nombres de usuario iniciales y las contraseñas demo son:
 
-| Perfil | Usuario | Contraseña inicial |
+| Perfil | Usuario | Contraseña |
 | --- | --- | --- |
-| Recursos Humanos | `a.principal` | `Admin#2024` |
-| TI | `s.ti` | `TI#Clave2024` |
-| Empleado — Ana Torres | `a.torres` | `Empleado#1` |
-| Empleado — Juan Perez | `j.perez` | `Empleado#1` |
-| Empleado — Camila Rios | `c.rios` | `Empleado#1` |
+| Recursos Humanos | `d.admin` | `Admin#2024` |
+| TI | `d.soporte` | `TI#Clave2024` |
+| Empleado — Ana Prueba | `a.prueba` | `Empleado#1` |
+| Empleado — Juan Ejemplo | `j.ejemplo` | `Empleado#1` |
+| Empleado — Camila Demo | `c.demo` | `Empleado#1` |
 
-Los nombres pueden llevar un sufijo si existen colisiones; utilice los que indique la consola. Las cuentas ya existentes se conservan y sus contraseñas no se restablecen al repetir la carga.
+La consola muestra los nombres de usuario generados y las contraseñas demo. Si hay colisiones, usa el username que aparezca en la consola.
 
-La carga realiza varias operaciones independientes: un fallo puede dejar datos parciales. Si falla, revise lo creado antes de volver a ejecutarla; no vacíe las tablas como paso de recuperación automático. Al repetirla, `main.py` comprueba también el RUT para reconocer empleados que no aparecen en la lista habitual, como Soporte TI.
+La siembra no trunca ni borra registros, y no cambia la contraseña de una cuenta que ya exista. Para vaciar una base destinada solo a pruebas, confirma que sea `ecotech_rrhh` y ejecuta `database/reset_pruebas.sql` con una cuenta administradora. El archivo elimina empleados, cuentas, registros de horas, proyectos, departamentos, roles, códigos de recuperación e historial de indicadores; no elimina el esquema ni los usuarios MySQL. Después ejecuta la siembra demo.
 
 Para confirmar el resultado en MySQL:
 

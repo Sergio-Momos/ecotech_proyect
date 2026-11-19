@@ -21,6 +21,6 @@ CREATE TABLE password_reset_tokens (
 
 -- Permisos mínimos adicionales para el flujo de recuperación.
 -- La aplicación accede a esta cuenta usando su perfil auth.
-GRANT SELECT ON ecotech_rrhh.empleados TO 'ecotech_auth'@'%';
-GRANT UPDATE ON ecotech_rrhh.usuarios TO 'ecotech_auth'@'%';
-GRANT SELECT, INSERT, UPDATE ON ecotech_rrhh.password_reset_tokens TO 'ecotech_auth'@'%';
+GRANT SELECT ON ecotech_rrhh.empleados TO 'ecotech_auth'@'localhost';
+GRANT UPDATE ON ecotech_rrhh.usuarios TO 'ecotech_auth'@'localhost';
+GRANT SELECT, INSERT, UPDATE ON ecotech_rrhh.password_reset_tokens TO 'ecotech_auth'@'localhost';

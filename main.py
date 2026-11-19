@@ -1,22 +1,23 @@
-"""
-seed.py — Siembra datos base para EcoTech RRHH.
-Corre UNA VEZ por instalación nueva, desde la raíz del proyecto:
+"""Siembra idempotente de datos ficticios para pruebas locales.
 
-    python seed.py
-
-Requisitos previos:
-  1. Tener el .env con FERNET_KEY y credenciales de MySQL (pedir al equipo).
-  2. Haber corrido database/esquema.sql en tu MySQL.
-  3. Haber corrido database/roles_mysql.sql en tu MySQL (con cuenta admin).
+Uso: python main.py --seed-demo
+No vacía tablas ni elimina datos existentes.
 """
 
 from datetime import date
+import argparse
 from database.conexion import establecer_perfil_activo
 from models.empleado import Empleado
 from models.rol import Rol
 from models.departamento import Departamento
 from models.proyecto import Proyecto
 from repositorios import empleado_repo, rol_repo, usuario_repo, departamento_repo, proyecto_repo
+
+PASSWORDS_DEMO = {
+    "rrhh": "Admin#2024",
+    "ti": "TI#Clave2024",
+    "empleado": "Empleado#1",
+}
 
 
 def sembrar_roles() -> dict:
@@ -50,11 +51,11 @@ def sembrar_roles() -> dict:
 def sembrar_empleados(roles: dict) -> dict:
     print("\n--- Empleados base ---")
     datos = [
-        ("Admin", "Principal", "Oficina Central 1", "900000001", "admin@ecotech.cl", "21.456.789-K", 900000, date(2024, 1, 1), "rrhh"),
-        ("Soporte", "TI", "Oficina Central 2", "900000002", "ti@ecotech.cl", "22.261.674-3", 800000, date(2024, 1, 1), "ti"),
-        ("Ana", "Torres", "Los Alerces 123", "912345678", "ana.torres@ecotech.cl", "11.111.111-1", 650000, date(2023, 3, 1), "empleado"),
-        ("Juan", "Perez", "Neptuno 097", "987654321", "juan.perez@ecotech.cl", "22.222.222-2", 580000, date(2024, 6, 15), "empleado"),
-        ("Camila", "Rios", "Av. Siempre Viva 742", "933333333", "camila.rios@ecotech.cl", "18.765.432-7", 725450, date(2024, 4, 20), "empleado"),
+        ("Demo", "Admin", "Dirección de prueba 1", "900000001", "admin@demo.invalid", "21.456.789-K", 900000, date(2024, 1, 1), "rrhh"),
+        ("Demo", "Soporte", "Dirección de prueba 2", "900000002", "ti@demo.invalid", "22.261.674-3", 800000, date(2024, 1, 1), "ti"),
+        ("Ana", "Prueba", "Dirección de prueba 3", "900000003", "ana@demo.invalid", "11.111.111-1", 650000, date(2023, 3, 1), "empleado"),
+        ("Juan", "Ejemplo", "Dirección de prueba 4", "900000004", "juan@demo.invalid", "22.222.222-2", 580000, date(2024, 6, 15), "empleado"),
+        ("Camila", "Demo", "Dirección de prueba 5", "900000005", "camila@demo.invalid", "18.765.432-7", 725450, date(2024, 4, 20), "empleado"),
     ]
 
     creados = {}
@@ -80,11 +81,6 @@ def sembrar_empleados(roles: dict) -> dict:
 
 def sembrar_usuarios(empleados_roles: dict, roles: dict) -> None:
     print("\n--- Usuarios ---")
-    contrasenas = {
-        "rrhh":     "Admin#2024",
-        "ti":       "TI#Clave2024",
-        "empleado": "Empleado#1",
-    }
     for nombre, (emp, rol_clave) in empleados_roles.items():
         usuario = usuario_repo.buscar_por_id(emp._id)
         if usuario is not None:
@@ -92,10 +88,10 @@ def sembrar_usuarios(empleados_roles: dict, roles: dict) -> None:
         else:
             usuario = usuario_repo.crear_para_empleado(
                 emp,
-                password=contrasenas[rol_clave],
+                password=PASSWORDS_DEMO[rol_clave],
                 rol=roles[rol_clave],
             )
-            print(f"  Creado: {usuario._username}  (contraseña inicial: {contrasenas[rol_clave]})")
+            print(f"  Creado: {usuario._username}")
 
 
 def sembrar_departamento(empleados_roles: dict) -> None:
@@ -104,14 +100,14 @@ def sembrar_departamento(empleados_roles: dict) -> None:
     if any(d._nombre == "RecursosHumanos" for d in existentes):
         print("  Ya existía: RecursosHumanos")
         return
-    ana = empleados_roles.get("Ana Torres")
+    ana = empleados_roles.get("Ana Prueba")
     if ana is None:
-        print("  Ana Torres no encontrada, se omite el departamento.")
+        print("  Ana Prueba no encontrada, se omite el departamento.")
         return
     emp_ana = ana[0]
     depto = Departamento(id=None, nombre="RecursosHumanos", gerente=emp_ana)
     departamento_repo.crear(depto)
-    juan = empleados_roles.get("Juan Perez")
+    juan = empleados_roles.get("Juan Ejemplo")
     if juan:
         departamento_repo.asignar_empleado(depto._id, juan[0]._id)
     print(f"  Creado: RecursosHumanos (id: {depto._id})")
@@ -129,7 +125,7 @@ def sembrar_proyecto(empleados_roles: dict) -> None:
         fecha_inicio=date.today(),
     )
     proyecto_repo.crear(proyecto)
-    for nombre in ("Ana Torres", "Camila Rios"):
+    for nombre in ("Ana Prueba", "Camila Demo"):
         emp_info = empleados_roles.get(nombre)
         if emp_info:
             proyecto_repo.asignar_empleado(proyecto._id, emp_info[0]._id)
@@ -137,6 +133,15 @@ def sembrar_proyecto(empleados_roles: dict) -> None:
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Siembra idempotente de datos ficticios para pruebas.")
+    parser.add_argument(
+        "--seed-demo", action="store_true",
+        help="crear los registros demo sin borrar los datos existentes",
+    )
+    args = parser.parse_args()
+    if not args.seed_demo:
+        parser.error("debes indicar --seed-demo; esta herramienta nunca trunca la base de datos")
+
     print("=" * 50)
     print("  EcoTech RRHH — Siembra de datos base")
     print("=" * 50)
@@ -154,11 +159,8 @@ def main():
 
     print("\n" + "=" * 50)
     print("  Siembra completada.")
-    print("\n  Credenciales iniciales:")
-    print("  Admin RRHH  → username generado  / Admin#2024")
-    print("  Soporte TI  → username generado  / TI#Clave2024")
-    print("  Empleados   → username generado  / Empleado#1")
-    print("\n  Los usernames exactos aparecen arriba en 'Usuarios'.")
+    print("\n  Contraseñas demo: RRHH Admin#2024 · TI TI#Clave2024 · Empleados Empleado#1")
+    print("  La siembra es idempotente y no borra datos existentes.")
     print("=" * 50)
 
 
