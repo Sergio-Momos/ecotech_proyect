@@ -281,32 +281,69 @@ No publique `.env` ni archivos que contengan contraseñas reales. La copia revis
 
 ### 8.3. Recuperación de contraseña por Gmail API
 
-Cada persona que vaya a enviar códigos desde su equipo debe configurar un remitente autorizado. La aplicación usa Gmail API con OAuth de escritorio por HTTPS; no usa contraseña SMTP ni contraseña de aplicación.
+La recuperación envía un código temporal desde una cuenta Gmail mediante Gmail API y autorización OAuth de escritorio. No usa contraseña SMTP ni contraseña de aplicación. Cada integrante que vaya a enviar códigos debe autorizar el remitente en su equipo.
 
-1. En [Google Cloud Console](https://console.cloud.google.com/), crea un proyecto o selecciona uno existente y habilita **Gmail API**.
-2. Configura la pantalla de consentimiento OAuth. Si la aplicación está en modo de prueba, agrega como usuario de prueba la cuenta Gmail remitente.
-3. Crea un ID de cliente OAuth de tipo **Aplicación de escritorio** y descarga el archivo JSON.
-4. Guarda ese archivo en la carpeta principal del proyecto con el nombre `credentials.json`.
-5. En `.env`, configura `GMAIL_ADDRESS` con la misma dirección Gmail autorizada. No agregues `GMAIL_APP_PASSWORD`.
-6. Instala las bibliotecas de OAuth y Gmail API dentro del entorno virtual:
+#### Configurar Gmail API y OAuth
+
+1. En [Google Cloud Console](https://console.cloud.google.com/), selecciona un proyecto o crea uno y habilita **Gmail API**.
+2. Abre **Google Auth Platform** y configura la pantalla de consentimiento: nombre de la aplicación, correo de soporte y audiencia. Si eliges **External** y la aplicación está en modo de prueba, agrega la cuenta remitente en **Audience → Test users**.
+3. En **Clients**, crea un cliente OAuth de tipo **Desktop app** y descarga el JSON.
+4. Guarda el JSON en la carpeta principal del proyecto con el nombre `credentials.json`.
+5. En `.env`, configura `GMAIL_ADDRESS` con la dirección de la misma cuenta Gmail que se autorizará:
+
+   ```dotenv
+   GMAIL_ADDRESS=cuenta.remitente@gmail.com
+   ```
+
+6. Activa el entorno virtual del proyecto e instala estas dependencias en ese mismo entorno:
 
    ```bash
    python -m pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
    ```
 
-7. Inicia la aplicación. La primera vez que se solicite un código, se abrirá el navegador para autorizar el envío desde esa cuenta. Al completar la autorización se creará `token.json` en la carpeta del proyecto.
+7. Inicia la aplicación y selecciona **Olvidé mi contraseña**. En el primer envío se abrirá el navegador de Google para iniciar sesión y conceder permiso de envío. Al terminar se guardará `token.json` en la carpeta del proyecto.
 
-`credentials.json` y `token.json` están excluidos de Git porque permiten acceder al remitente. Cada integrante debe configurar sus propios archivos localmente; no se deben subir al repositorio ni compartir por chat. Si se revoca el acceso o cambia la cuenta remitente, elimina `token.json` y repite la autorización con las credenciales correspondientes. El equipo necesita conexión HTTPS a Google para autorizar y enviar los mensajes.
+Google describe los pasos actuales en la [guía oficial de inicio rápido de Gmail API para Python](https://developers.google.com/workspace/gmail/api/quickstart/python) y la [guía para configurar el consentimiento OAuth](https://developers.google.com/workspace/guides/configure-oauth-consent).
+
+No subas `credentials.json`, `token.json` ni `.env` a Git. `credentials.json` identifica el cliente OAuth y `token.json` contiene la autorización local del remitente. Cada integrante debe autorizar Gmail en su equipo; no compartas el archivo `token.json`. Si se revoca el acceso o se cambia la cuenta remitente, elimina el `token.json` local y repite la autorización. El equipo necesita conexión HTTPS a Google para autorizar y enviar correos.
 
 #### Preparar la base de datos
 
-Antes de habilitar el flujo, ejecuta una sola vez como administrador SQL el archivo `database/migracion_recuperacion_password.sql`. La migración agrega la fecha del último cambio de contraseña, crea la tabla de códigos temporales y amplía los permisos de `ecotech_auth` para consultar los datos necesarios y actualizar contraseñas. Está dirigida a cuentas técnicas creadas con host `%`; si el host es distinto, ajusta las sentencias `GRANT` al host que muestre `mysql.user`.
+Para una base existente, antes de usar recuperación, ejecuta una sola vez como administrador SQL el archivo `database/migracion_recuperacion_password.sql`. El script agrega `password_changed_at`, crea `password_reset_tokens` y da a `ecotech_auth` permisos para consultar el correo, guardar códigos y cambiar la contraseña. Está escrito para cuentas técnicas creadas con host `%`; si el host de `ecotech_auth` es distinto, ajusta las sentencias `GRANT` al host que muestre `mysql.user`.
+
+La migración SQL se ejecuta en MySQL Workbench o en un cliente MySQL conectado a la base correcta (`ecotech_rrhh`). Abre el archivo, ejecuta todo el script una vez y confirma que termine sin errores. No vuelvas a ejecutarlo si ya agregó la columna o creó la tabla, porque las operaciones no son repetibles. Las bases nuevas creadas desde `database/esquema.sql` también necesitan esta migración para habilitar la recuperación.
 
 #### Usar la recuperación
 
-En el inicio de sesión, selecciona **Olvidé mi contraseña** e ingresa el nombre completo, RUT y correo registrados para la cuenta. Si coinciden con una cuenta activa, la aplicación envía un código de seis dígitos a ese correo. Ingresa el código y la contraseña nueva para completar el cambio. El código vence en 10 minutos y se invalida al usarlo o al solicitar otro. Si los datos no coinciden, la aplicación pide revisarlos sin indicar cuál dato pertenece a una cuenta.
+1. En la ventana de inicio de sesión, selecciona **Olvidé mi contraseña**.
+2. Ingresa el correo registrado en la ficha del empleado y selecciona **Enviar código**. El correo debe pertenecer a una cuenta de usuario activa.
+3. Revisa la bandeja de entrada y spam. El código tiene seis dígitos, vence en 10 minutos y se invalida después de usarse. Si solicitas otro código, el anterior queda invalidado.
+4. Ingresa el código, la contraseña nueva y su confirmación; selecciona **Cambiar contraseña**.
 
-Las contraseñas de acceso vencen a los 30 días y la aplicación solicita cambiarlas al iniciar sesión.
+Si el correo está vacío, la aplicación lo solicita. Si no corresponde a una cuenta activa, verás un mensaje general para revisar el correo. Si Gmail no está configurado, revisa `GMAIL_ADDRESS`, `credentials.json`, la autorización OAuth y la conexión HTTPS.
+
+Las contraseñas de acceso vencen a los 30 días y la aplicación solicita cambiarlas al iniciar sesión. Al restablecer una contraseña con este flujo, se registra la fecha del cambio.
+
+### 8.4. Impedir correos repetidos en empleados existentes
+
+La aplicación impide reutilizar un correo al crear o editar empleados. Compara los correos sin distinguir mayúsculas y quitando espacios al inicio o al final; por ejemplo, `Persona@correo.cl` y ` persona@correo.cl ` se consideran el mismo correo. La base de datos también tiene un índice único, así que la regla se mantiene aunque otra ruta intente guardar el dato.
+
+Las bases nuevas creadas desde `database/esquema.sql` ya incluyen `correo_hash` y el índice único. Para actualizar una base existente, haz primero un respaldo y sigue estos pasos una sola vez:
+
+1. En MySQL Workbench, selecciona la base `ecotech_rrhh`, abre `database/migracion_correo_hash_preparar.sql` y ejecútalo como administrador SQL. Esto agrega `correo_hash` inicialmente vacío.
+2. Desde la raíz del proyecto, activa el entorno virtual y ejecuta el script Python con ese mismo intérprete:
+
+   ```bash
+   python database/migracion_correo_hash_rellenar.py
+   ```
+
+   El script usa `FERNET_KEY` y las credenciales `DB_RRHH_USER`/`DB_RRHH_PASSWORD` del `.env` para leer los correos cifrados y completar el hash normalizado. Espera el mensaje `Hashes de correo completados para N empleado(s).` antes de continuar.
+3. Si el script termina correctamente, vuelve a MySQL Workbench y ejecuta `database/migracion_correo_hash_unico.sql` como administrador. Esto hace obligatoria la columna y crea el índice único.
+4. Reinicia la aplicación y prueba guardar un empleado con un correo nuevo. Después intenta asignar el mismo correo a otro empleado: debe aparecer un aviso de correo ya registrado.
+
+Si el script Python muestra `Hay correos repetidos ... ID: ...`, no ejecutó ninguna actualización. Consulta los nombres de esos empleados con `SELECT id, nombre FROM empleados WHERE id IN (...);`, edita el correo de uno de ellos en la aplicación y vuelve a ejecutar el paso 2. No ejecutes el paso 3 hasta que el paso 2 termine correctamente. Si aparece `Unknown column 'correo_hash'`, falta ejecutar el paso 1 o se ejecutó sobre otra base. Si el paso 1, 2 o 3 ya fue completado, no lo repitas: estos cambios de esquema son de una sola ejecución.
+
+En bases que fueron cargadas con una versión antigua de `database/recifrar_empleados_demo.py`, ejecuta también `python database/migracion_normalizar_rut_hash.py` una vez. Esto repara los hashes de RUT y mantiene la detección de RUT duplicados; no forma parte de la recuperación por correo.
 
 ## 9. Probar las cuatro conexiones
 
