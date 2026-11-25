@@ -4,6 +4,8 @@ from decimal import Decimal
 
 from .constantes import PATRON_RUT
 
+# Validaciones compartidas por modelos y formularios para aplicar reglas comunes.
+
 def validar_nombre_o_apellido(valor: str, campo: str) -> str:
     if not valor or not valor.isalpha():
         raise ValueError(f"{campo} debe contener solo letras, sin espacios, números ni signos.")

@@ -1,5 +1,7 @@
 from datetime import date, datetime
 
+# Funciones auxiliares para interpretar fechas ingresadas en los formularios.
+
 
 def leer_fecha_opcional(texto: str, nombre: str) -> date | None:
     """Convierte una fecha de filtro; un campo vacío indica que no hay límite."""

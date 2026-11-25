@@ -8,6 +8,7 @@ _perfil_activo = None  # None -> usa el perfil "auth" por defecto
 
 
 def establecer_perfil_activo(nombre_perfil: str) -> None:
+    """Selecciona un perfil de conexión definido en config.py."""
     global _perfil_activo
     if nombre_perfil not in DB_PROFILES:
         raise ValueError(f"Perfil de BD desconocido: {nombre_perfil}")
@@ -15,19 +16,23 @@ def establecer_perfil_activo(nombre_perfil: str) -> None:
 
 
 def limpiar_perfil_activo() -> None:
+    """Quita el perfil actual; las siguientes conexiones usan el perfil auth."""
     global _perfil_activo
     _perfil_activo = None
 
 
 def perfil_activo() -> str:
+    """Devuelve el perfil seleccionado o auth como valor predeterminado."""
     return _perfil_activo or "auth"
 
 
 def _config_activa() -> dict:
+    """Obtiene las credenciales y opciones del perfil actualmente seleccionado."""
     return DB_PROFILES[perfil_activo()]
 
 
 def obtener_conexion():
+    """Abre una conexión MySQL y traduce errores del conector a ConnectionError."""
     try:
         print(f"[DEBUG] Conectando con perfil: {perfil_activo()}")
         return mysql.connector.connect(**_config_activa())
@@ -52,6 +57,7 @@ def probar_conexion(perfil: str | None = None) -> bool:
 
 @contextmanager
 def cursor_db(dictionary: bool = False):
+    """Administra cursor y conexión: confirma si va bien, revierte si falla y cierra."""
     conexion = obtener_conexion()
     cursor = None
     try:

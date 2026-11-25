@@ -4,6 +4,7 @@ from utils.validaciones import validar_con_patron, validar_id
 
 
 class Departamento:
+    """Representa un departamento, su gerente y su nómina de empleados."""
     def __init__(self, id: int | None, nombre: str, gerente: Empleado) -> None:
         self._valor_id = None
         if id is not None:
@@ -74,6 +75,7 @@ class Departamento:
         raise ValueError(f"No se encontró un empleado con id {id} en este departamento.")
 
     def reasignar_empleado(self, empleado: Empleado, destino: "Departamento") -> None:
+        """Mueve un empleado desde este departamento hacia otro."""
         if not isinstance(destino, Departamento):
             raise TypeError("El destino debe ser una instancia de la clase Departamento.")
                 

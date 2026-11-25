@@ -17,6 +17,7 @@ from utils.validaciones import (
 
 
 class Persona:
+    """Clase base con identidad y datos personales validados."""
 
     def __init__(
         self,

@@ -80,6 +80,7 @@ class Empleado(Persona):
 
 
     def registrar_horas(self, fecha: date, horas_trabajadas: float, descripcion: str, proyecto: "Proyecto") -> RegistroTiempo:
+        """Valida reglas del empleado y crea un registro en memoria."""
 
         # Regla 1: no se pueden registrar horas antes del inicio del contrato
         if fecha < self._fecha_inicio_contrato:
@@ -106,6 +107,7 @@ class Empleado(Persona):
         return registro
 
     def crear_usuario(self, password: str, rol: "Rol") -> "Usuario":
+        """Crea una cuenta asociada al empleado si todavía no tiene una."""
         if self._valor_usuario is not None:
             raise ValueError("El empleado ya tiene una cuenta de usuario.")
         username = Usuario.generar_base_username(self._nombre)

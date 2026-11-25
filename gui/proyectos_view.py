@@ -139,6 +139,7 @@ class NominaProyectoView(ctk.CTkToplevel):
 
 
 class ProyectosView(ctk.CTkFrame):
+    """Lista proyectos y permite administrarlos y ver los inactivos."""
     def __init__(self, parent, app):
         super().__init__(parent)
         self._app = app

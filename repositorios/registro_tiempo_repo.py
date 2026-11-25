@@ -7,6 +7,7 @@ from utils.validaciones import validar_historial_horas, validar_id
 
 
 def _fila_a_registro(fila: dict) -> RegistroTiempo:
+    """Reconstruye un registro de horas enlazándolo con empleado y proyecto."""
     empleado = empleado_repo.buscar_por_id(fila["empleado_id"])
     proyecto = proyecto_repo.buscar_por_id(fila["proyecto_id"])
     registro = RegistroTiempo(
@@ -21,6 +22,7 @@ def _fila_a_registro(fila: dict) -> RegistroTiempo:
 
 
 def _validar_usuario(usuario) -> None:
+    """Exige una sesión asociada a un usuario activo antes de modificar horas."""
     if usuario is None or not usuario._activo:
         raise PermissionError("Se requiere un usuario activo.")
 
@@ -38,6 +40,7 @@ def _bloquear_empleados(cursor, usuario_id: int, empleado_id: int) -> None:
 
 
 def _historial(cursor, empleado_id: int) -> list[dict]:
+    """Lee y bloquea el historial para validar topes sin escrituras simultáneas."""
     cursor.execute(
         "SELECT id, fecha, horas_trabajadas, proyecto_id FROM registros_tiempo "
         "WHERE empleado_id = %s FOR UPDATE", (empleado_id,),
@@ -46,6 +49,7 @@ def _historial(cursor, empleado_id: int) -> list[dict]:
 
 
 def _validar_proyecto(cursor, registro, proyecto_anterior=None) -> None:
+    """Comprueba que el proyecto exista y esté activo (salvo si ya estaba asignado)."""
     validar_id(registro._proyecto._id, "El id del proyecto")
     cursor.execute(
         "SELECT id FROM proyectos WHERE id = %s AND (activo = TRUE OR id = %s)",
@@ -56,6 +60,7 @@ def _validar_proyecto(cursor, registro, proyecto_anterior=None) -> None:
 
 
 def _insertar(cursor, registro) -> int:
+    """Inserta un registro de horas y devuelve el id asignado por MySQL."""
     cursor.execute(
         """
         INSERT INTO registros_tiempo
@@ -74,6 +79,7 @@ def _insertar(cursor, registro) -> int:
 
 
 def crear(registro: RegistroTiempo, *, usuario=None) -> int:
+    """Crea un registro individual delegando validaciones y transacción al lote."""
     if perfil_activo() == "ti":
         raise PermissionError("El perfil TI no puede registrar horas.")
     return crear_lote([registro], usuario=usuario)[0]
@@ -113,12 +119,14 @@ def crear_lote(registros: list[RegistroTiempo], *, usuario) -> list[int]:
     return ids
 
 def buscar_por_id(id_registro: int) -> RegistroTiempo | None:
+    """Busca un registro por id y reconstruye sus objetos relacionados."""
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute("SELECT * FROM registros_tiempo WHERE id = %s", (id_registro,))
         fila = cursor.fetchone()
     return _fila_a_registro(fila) if fila else None
 
 def listar_todos() -> list[RegistroTiempo]:
+    """Devuelve todos los registros de horas guardados."""
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute("SELECT * FROM registros_tiempo")
         filas = cursor.fetchall()
@@ -130,7 +138,7 @@ def listar(
     desde: date | None = None,
     hasta: date | None = None,
 ) -> list[RegistroTiempo]:
-
+    """Filtra por empleado, proyecto o rango de fechas; ordena lo más reciente primero."""
     condiciones = []
     parametros = []
 
@@ -158,6 +166,7 @@ def listar(
     return [_fila_a_registro(fila) for fila in filas]
 
 def actualizar(registro: RegistroTiempo, *, usuario) -> None:
+    """Autoriza y valida cambios antes de actualizar un registro existente."""
     _validar_usuario(usuario)
     if usuario._rol._perfil_bd == "ti" or not usuario._rol.tiene_permiso(Rol._ACTUALIZAR_REGISTROS):
         raise PermissionError("No tienes permiso para editar este registro.")
@@ -215,6 +224,7 @@ def cargar_historial(empleado) -> None:
         empleado._agregar_registro_tiempo(registro)
 
 def listar_por_proyecto(proyecto_id: int) -> list[RegistroTiempo]:
+    """Lista registros asociados a un proyecto específico."""
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute(
             """
@@ -227,6 +237,7 @@ def listar_por_proyecto(proyecto_id: int) -> list[RegistroTiempo]:
     return [_fila_a_registro(fila) for fila in filas]
 
 def listar_por_empleado(empleado_id: int) -> list[RegistroTiempo]:
+    """Lista registros asociados a un empleado específico."""
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute(
             """
@@ -239,6 +250,7 @@ def listar_por_empleado(empleado_id: int) -> list[RegistroTiempo]:
     return [_fila_a_registro(fila) for fila in filas]
 
 def eliminar(id_registro: int, *, usuario) -> None:
+    """Comprueba permisos y elimina físicamente el registro de horas."""
     _validar_usuario(usuario)
     if not usuario._rol.tiene_permiso(Rol._ELIMINAR_REGISTROS):
         raise PermissionError("No tienes permiso para eliminar registros.")

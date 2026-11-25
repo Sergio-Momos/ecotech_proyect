@@ -8,6 +8,7 @@ from gui.componentes import crear_encabezado, limpiar_contenedor
 from utils.auditoria import accion, error as log_error
 
 class DepartamentoFormView(ctk.CTkToplevel):
+    """Formulario para crear o modificar un departamento y su gerente."""
     def __init__(self, parent, *,on_guardado, usuario_id,departamento_existente=None):
         super().__init__(parent)
         self._on_guardado = on_guardado
@@ -131,6 +132,7 @@ class NominaDepartamentoView(ctk.CTkToplevel):
 
 
 class DepartamentosView(ctk.CTkFrame):
+    """Vista principal de departamentos con opciones de gestión."""
     def __init__(self, parent, app):
         super().__init__(parent)
         self._app = app

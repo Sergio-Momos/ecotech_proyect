@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from .proyecto import Proyecto
 
 class RegistroTiempo:
+    """Representa horas trabajadas por una persona en un proyecto y una fecha."""
     def __init__(
         self,
         fecha: date,

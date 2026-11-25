@@ -8,6 +8,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 
 
 class Informe:
+    """Prepara datos de informe y los exporta a PDF o Excel."""
     _TIPO_EMPLEADOS = "empleados"
     _TIPO_DEPARTAMENTOS = "departamentos"
     _TIPO_PROYECTOS = "proyectos"

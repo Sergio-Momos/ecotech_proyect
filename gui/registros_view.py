@@ -12,6 +12,7 @@ from mysql.connector import Error as ErrorBD
 
 
 class RegistroFormView(ctk.CTkToplevel):
+    """Formulario para ingresar o editar un registro de horas."""
 
     def __init__(self, parent, *, on_guardado, registro, usuario):
         super().__init__(parent)
@@ -79,6 +80,7 @@ class RegistroFormView(ctk.CTkToplevel):
 
 
 class CargaMasivaView(ctk.CTkToplevel):
+    """Permite preparar y guardar varios registros de horas en una operación."""
 
     def __init__(self, parent, *, empleado, on_guardado, usuario):
         super().__init__(parent)
@@ -222,6 +224,7 @@ class CargaMasivaView(ctk.CTkToplevel):
 
 
 class RegistrosView(ctk.CTkFrame):
+    """Consulta registros propios o generales, con filtros y acciones autorizadas."""
     TODOS = "(Todos)"
 
     def __init__(self, parent, app):

@@ -8,6 +8,7 @@ from utils.auditoria import accion, error as log_error
 
 
 class CrearUsuarioView(ctk.CTkToplevel):
+    """Ventana TI para crear una cuenta de acceso para un empleado."""
     def __init__(self, parent, *, empleado, on_guardado, usuario_id: int):
         super().__init__(parent)
         self._empleado = empleado
@@ -78,6 +79,7 @@ class CrearUsuarioView(ctk.CTkToplevel):
 
 
 class GestionarCuentaView(ctk.CTkToplevel):
+    """Ventana TI para restablecer contraseña o activar/desactivar una cuenta."""
     def __init__(self, parent, *, usuario, on_guardado, usuario_id: int):
         super().__init__(parent)
         self._usuario = usuario
@@ -162,6 +164,7 @@ class GestionarCuentaView(ctk.CTkToplevel):
 
 
 class TiView(ctk.CTkFrame):
+    """Panel de soporte TI para gestionar cuentas y revisar su estado."""
     def __init__(self, parent, app):
         super().__init__(parent)
         self._app = app

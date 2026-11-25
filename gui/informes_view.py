@@ -12,6 +12,7 @@ from utils.auditoria import accion, error as log_error
 
 
 class InformesView(ctk.CTkFrame):
+    """Permite filtrar información y exportarla como informe PDF o Excel."""
     TIPOS = {
         "Empleados": Informe._TIPO_EMPLEADOS,
         "Departamentos": Informe._TIPO_DEPARTAMENTOS,

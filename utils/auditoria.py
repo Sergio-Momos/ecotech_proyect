@@ -3,6 +3,8 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 
+# Registra acciones, horas y errores en archivos rotativos para mantener trazabilidad.
+
 LOG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 

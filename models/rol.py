@@ -2,6 +2,7 @@ from utils.validaciones import validar_texto, validar_id
 
 
 class Rol:
+    """Define un perfil de acceso y el conjunto de permisos asociado."""
     """Conjunto de permisos que determina qué acciones puede realizar un usuario.
 
     `perfil_bd` es un dato distinto de los permisos: identifica qué CUENTA
@@ -103,7 +104,7 @@ class Rol:
         self._valor_permisos.discard(validar_texto(permiso, self._CAMPO_PERMISO))
 
     def tiene_permiso(self, permiso: str) -> bool:
-        """Indica si el rol permite ejecutar una acción específica."""
+        """Indica si el rol puede ejecutar la acción solicitada."""
         permiso = validar_texto(permiso, self._CAMPO_PERMISO)
         if self._perfil_bd == "ti" and permiso in {
             self._CREAR_REGISTRO_PROPIO,

@@ -5,6 +5,7 @@ from datetime import date
 
 
 class Proyecto:
+    """Representa un proyecto y mantiene sus empleados participantes."""
     def __init__(self, id: int| None, nombre: str, descripcion: str, fecha_inicio: date, activo: bool = True):
         self._valor_id = None
         if id is not None:
@@ -60,6 +61,7 @@ class Proyecto:
         return tuple(self._valor_empleados)
 
     def asignar_empleado(self, empleado: Empleado) -> None:
+        """Asocia al empleado y mantiene sincronizada la relación en memoria."""
         if not isinstance(empleado, Empleado):
             raise TypeError("El empleado debe ser una instancia de la clase Empleado.")
         if any(e._id == empleado._id for e in self._valor_empleados):

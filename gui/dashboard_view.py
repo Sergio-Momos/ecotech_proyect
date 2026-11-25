@@ -9,6 +9,7 @@ from gui.registros_view import RegistrosView
 from gui.ti_view import TiView
 from gui.informes_view import InformesView
 class DashboardView(ctk.CTkFrame):
+    """Menú principal; presenta opciones según el rol del usuario conectado."""
     def __init__(self, parent, app):
         super().__init__(parent)
 

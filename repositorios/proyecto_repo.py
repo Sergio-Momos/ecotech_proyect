@@ -4,6 +4,7 @@ from repositorios import empleado_repo
 from models.proyecto import Proyecto
 
 def _fila_a_proyecto(fila: dict) -> Proyecto:
+    """Convierte una fila SQL en Proyecto y carga los empleados participantes."""
     proyecto = Proyecto(
         id=fila["id"],
         nombre=fila["nombre"],
@@ -16,6 +17,7 @@ def _fila_a_proyecto(fila: dict) -> Proyecto:
     return proyecto
 
 def crear(proyecto: Proyecto) -> int:
+    """Inserta un proyecto y guarda el id autogenerado en el objeto."""
     with cursor_db() as (cursor, _):
         cursor.execute(
             """
@@ -34,6 +36,7 @@ def crear(proyecto: Proyecto) -> int:
     return proyecto._id
 
 def listar_todos(incluir_inactivos: bool = False) -> list[Proyecto]:
+    """Lista proyectos activos; incluir_inactivos=True devuelve también los archivados."""
     with cursor_db(dictionary=True) as (cursor, _):
         if incluir_inactivos:
             cursor.execute("SELECT * FROM proyectos")
@@ -44,6 +47,7 @@ def listar_todos(incluir_inactivos: bool = False) -> list[Proyecto]:
 
 
 def actualizar(proyecto: Proyecto) -> None:
+    """Actualiza los datos descriptivos del proyecto identificado por su id."""
     with cursor_db() as (cursor, _):
         cursor.execute(
             "UPDATE proyectos SET nombre = %s, descripcion = %s, fecha_inicio = %s WHERE id = %s",
@@ -57,6 +61,7 @@ def actualizar(proyecto: Proyecto) -> None:
 
 
 def asignar_empleado(proyecto_id: int, empleado_id: int) -> None:
+    """Añade la relación empleado-proyecto y evita duplicar la asignación."""
     with cursor_db() as (cursor, _):
         cursor.execute(
             "SELECT 1 FROM empleados_proyectos WHERE empleado_id = %s AND proyecto_id = %s",
@@ -70,6 +75,7 @@ def asignar_empleado(proyecto_id: int, empleado_id: int) -> None:
         )
 
 def quitar_empleado(proyecto_id: int, empleado_id: int) -> None:
+    """Elimina la relación entre ese empleado y ese proyecto."""
     with cursor_db() as (cursor, _):
         cursor.execute(
             "DELETE FROM empleados_proyectos WHERE empleado_id = %s AND proyecto_id = %s",
@@ -77,6 +83,7 @@ def quitar_empleado(proyecto_id: int, empleado_id: int) -> None:
         )
 
 def buscar_por_id(id_proyecto: int) -> Proyecto | None:
+    """Busca un proyecto por id y reconstruye también sus participantes."""
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute("SELECT * FROM proyectos WHERE id = %s", (id_proyecto,))
         fila = cursor.fetchone()
@@ -90,5 +97,6 @@ def eliminar(id_proyecto: int) -> None:
         cursor.execute("UPDATE proyectos SET activo = FALSE WHERE id = %s", (id_proyecto,))
 
 def activar(proyecto_id: int) -> None:
+    """Reactiva un proyecto que había sido desactivado lógicamente."""
     with cursor_db() as (cursor, _):
         cursor.execute("UPDATE proyectos SET activo = TRUE WHERE id = %s", (proyecto_id,))

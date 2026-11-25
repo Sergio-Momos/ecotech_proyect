@@ -10,6 +10,7 @@ from utils.validaciones import validar_con_patron, validar_password, validar_id
 
 
 class Usuario:
+    """Cuenta de acceso con contraseña hasheada, rol y estado activo."""
     _LARGO_MAXIMO_USERNAME = 20
 
     def __init__(self, id: int, username: str, password: str, rol: Rol, activo: bool= True) -> None:
@@ -66,10 +67,12 @@ class Usuario:
 
     # usuario.py — agregar, junto a los demás métodos de instancia
     def verificar_password(self, password: str) -> bool:
+        """Compara una contraseña ingresada con el hash almacenado."""
         return Seguridad.verificar_password(password, self._valor_password)
 
     @classmethod
     def generar_base_username(cls, nombre_completo: str) -> str:
+        """Forma inicial.apellido, quita tildes y limita el largo del username."""
         partes = cls._quitar_acentos(nombre_completo).strip().split()
         if len(partes) < 2:
             raise ValueError("Se necesita nombre y apellido para generar el username.")

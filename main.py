@@ -20,6 +20,7 @@ from repositorios import empleado_repo, rol_repo, usuario_repo, departamento_rep
 
 
 def sembrar_roles() -> dict:
+    """Crea roles base si faltan y sincroniza permisos definidos en el código."""
     print("\n--- Roles ---")
     roles = {}
     for factory, clave in [
@@ -48,6 +49,7 @@ def sembrar_roles() -> dict:
 
 
 def sembrar_empleados(roles: dict) -> dict:
+    """Carga empleados de demostración sin duplicar los ya existentes."""
     print("\n--- Empleados base ---")
     datos = [
         ("Admin Principal",  "Oficina Central 1",  "900000001", "admin@ecotech.cl",      "21.456.789-K", 900000, date(2024, 1, 1),  "rrhh"),
@@ -76,6 +78,7 @@ def sembrar_empleados(roles: dict) -> dict:
 
 
 def sembrar_usuarios(empleados_roles: dict, roles: dict) -> None:
+    """Crea cuentas iniciales para los empleados que aún no tengan usuario."""
     print("\n--- Usuarios ---")
     contrasenas = {
         "rrhh":     "Admin#2024",
@@ -96,6 +99,7 @@ def sembrar_usuarios(empleados_roles: dict, roles: dict) -> None:
 
 
 def sembrar_departamento(empleados_roles: dict) -> None:
+    """Crea el departamento base y asigna empleados de ejemplo."""
     print("\n--- Departamento base ---")
     existentes = departamento_repo.listar_todos()
     if any(d._nombre == "RecursosHumanos" for d in existentes):
@@ -115,6 +119,7 @@ def sembrar_departamento(empleados_roles: dict) -> None:
 
 
 def sembrar_proyecto(empleados_roles: dict) -> None:
+    """Crea el proyecto de ejemplo y asigna sus participantes."""
     print("\n--- Proyecto base ---")
     existentes = proyecto_repo.listar_todos(incluir_inactivos=True)
     if any(p._nombre == "PanelesSolares" for p in existentes):
@@ -134,6 +139,7 @@ def sembrar_proyecto(empleados_roles: dict) -> None:
 
 
 def main():
+    """Ejecuta en orden la carga inicial de roles, personas y relaciones."""
     print("=" * 50)
     print("  EcoTech RRHH — Siembra de datos base")
     print("=" * 50)

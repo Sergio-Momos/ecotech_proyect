@@ -8,6 +8,8 @@ venv/
 .env
 .env.*
 config.py
+credentials.json
+token.json
 
 # Herramientas y sistema operativo
 .pytest_cache/
