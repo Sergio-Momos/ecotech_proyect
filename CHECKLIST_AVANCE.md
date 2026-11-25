@@ -164,7 +164,7 @@ Las pruebas están en `tests/test_horas.py` y `tests/test_flujos.py`. La carpeta
 - [x] Inicio y cierre de sesión en `app.py`; selección/limpieza del perfil de BD.
 - [x] Punto de entrada de la aplicación gráfica: `app.py`.
 - [x] Siembra de datos iniciales en `main.py`; no es el punto de entrada de la interfaz.
-- [x] Hash de contraseñas con PBKDF2-HMAC-SHA256, salt aleatorio y comparación con `secrets.compare_digest()`.
+- [x] Hash de contraseñas nuevas con Argon2id; hashes PBKDF2 heredados se verifican y migran a Argon2id al iniciar sesión correctamente.
 - [x] Hash de búsqueda de RUT para comprobar unicidad.
 - [x] Cifrado/descifrado de dirección, teléfono, correo, RUT y salario mediante `AES_ENCRYPT`/`AES_DECRYPT` en el repositorio de empleados.
 - [x] Auditoría de acciones, errores y carga de horas mediante archivos de log con rotación.

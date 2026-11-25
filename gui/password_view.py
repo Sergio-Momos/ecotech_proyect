@@ -48,7 +48,7 @@ class RecuperarPasswordView(ctk.CTkToplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Recuperar contraseña")
-        self.geometry("440x620")
+        self.geometry("440x560")
         self.grab_set()
         self.resizable(False, False)
         tarjeta = ctk.CTkFrame(self, corner_radius=12)
@@ -56,13 +56,9 @@ class RecuperarPasswordView(ctk.CTkToplevel):
         ctk.CTkLabel(tarjeta, text="Recuperar cuenta EcoTech",
                      font=ctk.CTkFont(size=20, weight="bold")).pack(padx=30, pady=(24, 8))
         ctk.CTkLabel(
-            tarjeta, text="Ingresa tus datos registrados para recibir un código.",
+            tarjeta, text="Ingresa tu correo registrado para recibir un código.",
             text_color="gray",
         ).pack(padx=25, pady=(0, 12))
-        self._nombre = ctk.CTkEntry(tarjeta, placeholder_text="Nombre completo", width=300)
-        self._nombre.pack(pady=8)
-        self._rut = ctk.CTkEntry(tarjeta, placeholder_text="RUT", width=300)
-        self._rut.pack(pady=8)
         self._correo = ctk.CTkEntry(tarjeta, placeholder_text="Correo registrado", width=300)
         self._correo.pack(pady=8)
         ctk.CTkButton(tarjeta, text="Enviar código", width=300, command=self._enviar).pack(pady=(8, 12))
@@ -76,15 +72,17 @@ class RecuperarPasswordView(ctk.CTkToplevel):
 
     def _enviar(self):
         correo = self._correo.get().strip()
+        if not correo:
+            self._correo.focus_set()
+            messagebox.showerror("Campo obligatorio", "El correo no puede quedar vacío.")
+            return
         try:
-            resultado = usuario_repo.solicitar_recuperacion_password(
-                self._nombre.get(), self._rut.get(), correo
-            )
+            resultado = usuario_repo.solicitar_recuperacion_password(correo)
             if not resultado:
                 messagebox.showerror(
-                    "Datos no coinciden",
-                    "El nombre, RUT o correo ingresado no coincide con una cuenta activa. "
-                    "Revisa los datos e inténtalo nuevamente.",
+                    "No se encontró la cuenta",
+                    "No encontramos una cuenta activa asociada a ese correo. "
+                    "Verifica que sea el correo registrado en la cuenta.",
                 )
                 return
             enviar_codigo_recuperacion(*resultado)

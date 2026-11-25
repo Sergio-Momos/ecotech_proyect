@@ -5,6 +5,7 @@ from config import AES_KEY
 
 
 def _fila_a_empleado(fila: dict) -> Empleado:
+    """Convierte una fila descifrada en Empleado; salario se guarda en centavos."""
     salario_centavos = int(fila["salario"])
     return Empleado(
         id=fila["id"],
@@ -35,9 +36,15 @@ def _select_cifrado(where: str) -> str:
 
 
 def crear(empleado: Empleado) -> int:
+    """Verifica correo y RUT únicos, cifra datos sensibles e inserta al empleado."""
+    correo_hash = Seguridad.hash_busqueda(empleado._correo.strip().casefold())
     rut_hash = Seguridad.hash_busqueda(empleado._rut)
 
     with cursor_db() as (cursor, _):
+        cursor.execute("SELECT id FROM empleados WHERE correo_hash = %s", (correo_hash,))
+        if cursor.fetchone() is not None:
+            raise ValueError(f"Ya existe un empleado con el correo {empleado._correo}.")
+
         cursor.execute("SELECT id FROM empleados WHERE rut_hash = %s", (rut_hash,))
         if cursor.fetchone() is not None:
             raise ValueError(f"Ya existe un empleado con el RUT {empleado._rut}.")
@@ -46,10 +53,10 @@ def crear(empleado: Empleado) -> int:
         cursor.execute(
             """
             INSERT INTO empleados
-                (nombre, direccion, telefono, correo, rut, rut_hash, salario, fecha_inicio_contrato)
+                (nombre, direccion, telefono, correo, correo_hash, rut, rut_hash, salario, fecha_inicio_contrato)
             VALUES (%s,
                     AES_ENCRYPT(%s, %s), AES_ENCRYPT(%s, %s),
-                    AES_ENCRYPT(%s, %s), AES_ENCRYPT(%s, %s),
+                    AES_ENCRYPT(%s, %s), %s, AES_ENCRYPT(%s, %s),
                     %s, AES_ENCRYPT(%s, %s), %s)
             """,
             (
@@ -57,6 +64,7 @@ def crear(empleado: Empleado) -> int:
                 empleado._direccion, AES_KEY,
                 empleado._telefono,  AES_KEY,
                 empleado._correo,    AES_KEY,
+                correo_hash,
                 empleado._rut,       AES_KEY,
                 rut_hash,
                 str(salario_centavos), AES_KEY,
@@ -69,6 +77,7 @@ def crear(empleado: Empleado) -> int:
 
 
 def buscar_por_id(id_empleado: int) -> Empleado | None:
+    """Busca un empleado por id y descifra sus datos personales."""
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute(
             _select_cifrado("WHERE id = %s"),
@@ -79,6 +88,7 @@ def buscar_por_id(id_empleado: int) -> Empleado | None:
 
 
 def listar_todos(incluir_inactivos: bool = False) -> list[Empleado]:
+    """Lista empleados descifrados; excluye cuentas TI de la vista de RRHH."""
     with cursor_db(dictionary=True) as (cursor, _):
         if incluir_inactivos:
             where = """
@@ -106,6 +116,7 @@ def listar_todos(incluir_inactivos: bool = False) -> list[Empleado]:
 
 
 def listar_por_departamento(departamento_id: int) -> list[Empleado]:
+    """Busca empleados pertenecientes al departamento indicado."""
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute(
             _select_cifrado("WHERE departamento_id = %s"),
@@ -116,6 +127,7 @@ def listar_por_departamento(departamento_id: int) -> list[Empleado]:
 
 
 def listar_por_proyecto(proyecto_id: int) -> list[Empleado]:
+    """Busca participantes mediante la tabla de unión empleados_proyectos."""
     with cursor_db(dictionary=True) as (cursor, _):
         cursor.execute(
             _select_cifrado("""
@@ -129,9 +141,18 @@ def listar_por_proyecto(proyecto_id: int) -> list[Empleado]:
 
 
 def actualizar(empleado: Empleado) -> None:
+    """Actualiza datos y mantiene correo y RUT únicos."""
+    correo_hash = Seguridad.hash_busqueda(empleado._correo.strip().casefold())
     rut_hash = Seguridad.hash_busqueda(empleado._rut)
 
     with cursor_db() as (cursor, _):
+        cursor.execute(
+            "SELECT id FROM empleados WHERE correo_hash = %s AND id != %s",
+            (correo_hash, empleado._id),
+        )
+        if cursor.fetchone() is not None:
+            raise ValueError(f"Ya existe otro empleado con el correo {empleado._correo}.")
+
         cursor.execute(
             "SELECT id FROM empleados WHERE rut_hash = %s AND id != %s",
             (rut_hash, empleado._id),
@@ -147,6 +168,7 @@ def actualizar(empleado: Empleado) -> None:
                 direccion = AES_ENCRYPT(%s, %s),
                 telefono  = AES_ENCRYPT(%s, %s),
                 correo    = AES_ENCRYPT(%s, %s),
+                correo_hash = %s,
                 rut       = AES_ENCRYPT(%s, %s),
                 rut_hash  = %s,
                 salario   = AES_ENCRYPT(%s, %s),
@@ -158,6 +180,7 @@ def actualizar(empleado: Empleado) -> None:
                 empleado._direccion, AES_KEY,
                 empleado._telefono,  AES_KEY,
                 empleado._correo,    AES_KEY,
+                correo_hash,
                 empleado._rut,       AES_KEY,
                 rut_hash,
                 str(salario_centavos), AES_KEY,
@@ -168,7 +191,19 @@ def actualizar(empleado: Empleado) -> None:
 
 
 def eliminar(id_empleado: int) -> None:
+    """Desactiva al empleado y lo quita de proyectos sin borrar su historial."""
     with cursor_db() as (cursor, _):
         cursor.execute(
+            "DELETE FROM empleados_proyectos WHERE empleado_id = %s", (id_empleado,)
+        )
+        cursor.execute(
             "UPDATE empleados SET activo = FALSE WHERE id = %s", (id_empleado,)
+        )
+
+
+def activar(id_empleado: int) -> None:
+    """Reactiva al empleado; sus proyectos deben asignarse nuevamente."""
+    with cursor_db() as (cursor, _):
+        cursor.execute(
+            "UPDATE empleados SET activo = TRUE WHERE id = %s", (id_empleado,)
         )

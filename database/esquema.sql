@@ -8,6 +8,7 @@ CREATE TABLE empleados (
     direccion VARCHAR(255) NOT NULL,
     telefono VARCHAR(255) NOT NULL,
     correo VARCHAR(255) NOT NULL,
+    correo_hash CHAR(64) NOT NULL UNIQUE,
     rut VARCHAR(255) NOT NULL,
     rut_hash CHAR(64) NOT NULL UNIQUE,   
     salario VARCHAR(255) NOT NULL,       

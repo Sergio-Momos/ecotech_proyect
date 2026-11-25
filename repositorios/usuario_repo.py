@@ -142,14 +142,9 @@ def actualizar_hash_password(usuario: Usuario, nuevo_hash: str) -> None:
     usuario._valor_password = nuevo_hash
 
 
-def solicitar_recuperacion_password(nombre: str, rut: str, correo: str) -> tuple[str, str] | None:
-    """Crea un código para una cuenta activa que coincide con nombre, RUT y correo."""
-    from utils.validaciones import normalizar_rut
-
-    nombre = nombre.strip()
-    rut_normalizado = normalizar_rut(rut)
+def solicitar_recuperacion_password(correo: str) -> tuple[str, str] | None:
+    """Crea un código para una cuenta activa asociada al correo registrado."""
     correo = correo.strip()
-    rut_hash = Seguridad.hash_busqueda(rut_normalizado)
     codigo = f"{secrets.randbelow(1_000_000):06d}"
     token_hash = hashlib.sha256(codigo.encode("utf-8")).hexdigest()
     with _conexion_auth():
@@ -158,11 +153,9 @@ def solicitar_recuperacion_password(nombre: str, rut: str, correo: str) -> tuple
                 """SELECT u.id, CAST(AES_DECRYPT(e.correo, %s) AS CHAR) AS correo
                    FROM empleados e JOIN usuarios u ON u.id = e.id
                    WHERE u.activo = TRUE
-                     AND e.rut_hash = %s
-                     AND LOWER(TRIM(e.nombre)) = LOWER(TRIM(%s))
-                     AND CAST(AES_DECRYPT(e.correo, %s) AS CHAR) = %s
+                     AND LOWER(TRIM(CAST(AES_DECRYPT(e.correo, %s) AS CHAR))) = LOWER(TRIM(%s))
                    LIMIT 1""",
-                (AES_KEY, rut_hash, nombre, AES_KEY, correo),
+                (AES_KEY, AES_KEY, correo),
             )
             fila = cursor.fetchone()
             if not fila:
